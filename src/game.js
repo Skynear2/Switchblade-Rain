@@ -22,6 +22,7 @@ config.PLAYER_MAX_VELOCITY  = 300
 config.PLAYER_HEALTH        = 30
 config.PLAYER_DRAG          = 300
 
+
 config.BULLET_FIRE_RATE     = 20
 config.BULLET_ANGLE_ERROR   = 0.1
 config.BULLET_LIFE_SPAN     = 750
@@ -35,9 +36,18 @@ var hud
 var map
 var obstacles
 var serras
-var timer
+var timer1
+var timer2
 var scorep1 = 0
 var scorep2 = 0
+var enemyspeed1 = 10000
+var enemyspeed2 = 10000
+var enemySpawnDelay1 = 3000
+var enemySpawnDelay2 = 3000
+var gameOver
+var itens
+
+
 var game = new Phaser.Game(config.RES_X, config.RES_Y, Phaser.CANVAS, 
     'game-container',
     {   
@@ -69,10 +79,8 @@ function createBullets() {
 
 function create() {
     game.physics.startSystem(Phaser.Physics.ARCADE)
+    spawn()
     //game.physics.arcade.gravity.y = 300;
-    timer = game.time.create(true);
-    timer.loop(1000, fireSaw, this);
-    timer.start()
     var skyWidth = game.cache.getImage('sky').width
     var skyHeight = game.cache.getImage('sky').height
     sky = game.add.tileSprite(
@@ -91,7 +99,7 @@ function create() {
     serras = game.add.group()
     createMap()
 
-    player1 = new Player(game, game.width*2/9, game.height/2, 
+    player1 = new Player(game, game.width*2/9, game.height-85, 
                         'plane1', 0xff0000, createBullets(), {   
             left: Phaser.Keyboard.LEFT,
             right: Phaser.Keyboard.RIGHT,
@@ -99,7 +107,7 @@ function create() {
             down: Phaser.Keyboard.DOWN,
             fire: Phaser.Keyboard.L
         })
-    player2 = new Player(game, game.width*7/9, game.height/2, 
+    player2 = new Player(game, game.width*7/9, game.height-85, 
                         'plane1', 0x00ff00, createBullets(), {   
             left: Phaser.Keyboard.A,
             right: Phaser.Keyboard.D,
@@ -116,10 +124,18 @@ function create() {
     player2.scale.x *= -1;
 
     hud = {
-        text1: createHealthText(game.width*1/9, 50, 'PLAYER 1: 20'),
-        text2: createHealthText(game.width*8/9, 50, 'PLAYER 2: 20'),
+        text1: createHealthText(game.width*1/9, 50, 'PLAYER 1: '),
+        text2: createHealthText(game.width*8/9, 50, 'PLAYER 2: '),
         fps: createHealthText(game.width*6/9, 50, 'FPS'),
-    }
+        text3: createHealthText((game.width/2 - 450), (game.height/2), 'Score Final: '),
+        text4: createHealthText((game.width - 285), (game.height/2), 'Score Final: '),
+        text5: createEndText(game.width/2, game.height/2-40, 'GAME OVER!!', ),
+        text6: createWinnerText(game.width/2, (game.height/2 + 60), 'PLAYER 1 WIN!!!'),
+        text7: createWinnerText(game.width/2, (game.height/2 + 60), 'PLAYER 2 WIN!!!'),
+        
+       
+        }
+    //createText()
     updateHud()
 
     var fps = new FramesPerSecond(game, game.width*3/9, 50)
@@ -130,6 +146,38 @@ function create() {
 
     game.time.advancedTiming = true;
 }
+
+function spawn (){
+
+    timer1 = game.time.create(true);
+    timer1.loop(enemySpawnDelay1, fireSaw1, this);
+    timer1.start()
+    timer2 = game.time.create(true);
+    timer2.loop(enemySpawnDelay2, fireSaw2, this);
+    timer2.start()
+
+}
+
+
+/*//function createText(){
+        var centroX1 = game.width/2 - 450
+        var centroY1 = game.height/2
+        var centroX2 = game.width - 450
+        var centroY2 = game.height/2
+        console.log("centro:"+centroX2 )
+        scoreFinal1 = game.add.text(centroX1 , centroY1, 'Score final:', { font: '24px Arial', fill: '#fff' })
+        scoreFinal2 = game.add.text(centroX2 , centroY2, 'Score final2:', { font: '24px Arial', fill: '#fff' })
+        gameOver = game.add.text(game.world.centerX, game.world.centerY, 'GAME OVER!', { font: '84px Arial', fill: '#fff' })
+        gameOver.anchor.setTo(0.5, 0.5)
+        gameOver.visible = false
+        scoreFinal1.anchor.setTo(0.5, 0.5)
+        scoreFinal1.visible = true
+        scoreFinal1.stroke = '#000000';
+        scoreFinal1.strokeThickness = 2;
+        scoreFinal2.stroke = '#000000';
+        scoreFinal2.strokeThickness = 2;
+        
+//}*/
 
 function loadFile() {
     var text = game.cache.getText('map1');
@@ -170,6 +218,30 @@ function toggleFullScreen() {
     }
 }
 
+function createWinnerText(x, y, text) {
+    var style = {font: 'bold 64px Arial', fill: 'white'}
+    var text = game.add.text(x, y, text, style)
+    //text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2)
+    text.stroke = '#000000';
+    text.strokeThickness = 2;
+    text.anchor.setTo(0.5, 0.5)
+    text.visible = false
+    return text
+}
+
+function createEndText(x, y, text) {
+    var style = {font: 'bold 84px Arial', fill: 'white'}
+    var text = game.add.text(x, y, text, style)
+    //text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2)
+    text.stroke = '#000000';
+    text.strokeThickness = 2;
+    text.anchor.setTo(0.5, 0.5)
+    text.visible = false
+    return text
+}
+
+
+
 function createHealthText(x, y, text) {
     var style = {font: 'bold 16px Arial', fill: 'white'}
     var text = game.add.text(x, y, text, style)
@@ -186,14 +258,31 @@ function updateBullets(bullets) {
     })
 }
 
-function fireSaw(){
-    var aux = Math.floor((Math.random() * 1280) + 1);
-                var saw = new Saw(game, aux, -30, 'saw', aux) 
-                game.add.existing(saw)
-                obstacles.add(saw)
 
-    
+
+function fireSaw1(){
+    var aux = Math.floor((Math.random() * 639) + 1);
+    console.log(player1.alive)    
+    if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
+                var saw = new Saw(game, aux, -30, 'saw', aux, enemyspeed1) 
+                game.add.existing(saw)
+                obstacles.add(saw)}
+      
 }
+
+function fireSaw2(){
+    var auxSpawn2 = 640 
+    console.log("antes de somar:"+auxSpawn2)
+    auxSpawn2 += Math.floor((Math.random() * 640) + 1);    
+    console.log("dps de somar:"+auxSpawn2)
+    if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
+                var saw = new Saw(game, auxSpawn2, -30, 'saw', auxSpawn2, enemyspeed2) 
+                game.add.existing(saw)
+                obstacles.add(saw)}
+      
+}
+    
+
 function update() {
     
    /* console.log(aux3)
@@ -236,7 +325,7 @@ function killBullet(saw, wall) {
     else if (saw.body.x > 641){
         scorep2 += 5
     }
-    console.log("X:"+saw.body.x)
+    //console.log("X:"+saw.body.x)
     //saw.kill()
     updateHud()
 }
@@ -249,9 +338,42 @@ function hitPlayer(player, bullet) {
     }
 }
 
+function winner(){
+    
+    if(!(player1.alive) && !(player2.alive) && (scorep1 > scorep2)){
+        hud.text3.visible = true
+        hud.text4.visible = true
+        hud.text5.visible = true
+        hud.text6.visible = true
+        hut       
+        var fadeInGameOver = game.add.tween(hud.text5);
+        fadeInGameOver.to({ alpha: 1 }, 5000, Phaser.Easing.Quintic.Out);
+        fadeInGameOver.start();
+        var fadeInWinner = game.add.tween(hud.text6);
+        fadeInWinner.to({ alpha: 0.5 }, 1000, Phaser.Easing.Quintic.Out);
+        fadeInWinner.start();
+    }else 
+    if(!(player1.alive) && !(player2.alive) && (scorep1 < scorep2)){
+        hud.text3.visible = true
+        hud.text4.visible = true
+        hud.text5.visible = true
+        hud.text7.visible = true       
+        var fadeInGameOver = game.add.tween(hud.text5);
+        fadeInGameOver.to({ alpha: 1 }, 5000, Phaser.Easing.Quintic.Out);
+        fadeInGameOver.start();
+        var fadeInWinner = game.add.tween(hud.text7);
+        fadeInWinner.to({ alpha: 1 }, 1000, Phaser.Easing.Quintic.Out);
+        fadeInWinner.start();
+    }
+
+}
+
 function updateHud() {
     hud.text1.text = `PLAYER 1: ${player1.health} SCORE: ${scorep1}`
     hud.text2.text = `PLAYER 1: ${player2.health} SCORE: ${scorep2}`
+    hud.text3.text = `Score Final: ${scorep1}`
+    hud.text4.text = `Score Final: ${scorep2}`
+    winner()
     //hud.text2.text = 'PLAYER 2: ' + player2.health + 'SCORE:' +scorep2
 }
 

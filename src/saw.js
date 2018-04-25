@@ -1,11 +1,11 @@
 
 class Saw extends Phaser.Sprite {
-    constructor(game, x, y, img, type, random) {
+    constructor(game, x, y, img, random, speed) {
         super(game, x, y, img)
         this.scale.setTo(1.5, 1.5)
         this.anchor.setTo(0.5, 0.5)
         game.physics.arcade.enable(this)
-        var sawSpeed = 10000
+        
         this.body.setSize(46, 46, 9, 9)
         this.body.isCircle = true
         var left = 0
@@ -19,7 +19,7 @@ class Saw extends Phaser.Sprite {
        
         
             game.add.tween(this)
-                    .to( { x: random, y: down }, sawSpeed, Phaser.Easing.Exponential.Out, true )
+                    .to( { x: random, y: down }, speed, Phaser.Easing.Exponential.Out, true )
                     .loop(-1)
                     .start()
             
