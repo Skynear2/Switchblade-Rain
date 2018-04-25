@@ -158,6 +158,9 @@ function spawnItens(){
     timeritem = game.time.create(true)
     timeritem.loop(10000, spawnIten1, this)
     timeritem.start()
+    timeritem = game.time.create(true)
+    timeritem.loop(10000, spawnIten2, this)
+    timeritem.start()
 }
 
 function spawn (){
@@ -281,6 +284,19 @@ function spawnIten1(){
       
 }
 
+function spawnIten2(){
+    var auxSpawn2 = 640
+    auxSpawn2 += Math.floor((Math.random() * 639) + 1);
+    //console.log(player1.alive)    
+    if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
+                var item = new Bonus(game, auxSpawn2, -30, 'itens', auxSpawn2, enemyspeed1) 
+                game.add.existing(item)
+                itens.add(item)}
+      
+}
+
+
+
 function fireSaw1(){
     var aux = Math.floor((Math.random() * 639) + 1);
     //console.log(player1.alive)    
@@ -338,9 +354,9 @@ function update() {
     
 }
 
-function killBarrel(saw, wall) {
+function killBarrel(item, wall) {
     //wall.kill()
-    saw.kill()
+    item.kill()
 }
 
 function killBullet(saw, wall) {
