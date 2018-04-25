@@ -1,12 +1,13 @@
-class Saw extends Phaser.Sprite {
+
+class Bonus extends Phaser.Sprite {
     constructor(game, x, y, img, random, speed) {
         super(game, x, y, img)
-        this.scale.setTo(1.5, 1.5)
-        this.anchor.setTo(0.5, 0.5)
+        this.scale.setTo(0.25, 0.25)
+        this.anchor.setTo(0.2, 0.3)
         game.physics.arcade.enable(this)
         
-        this.body.setSize(46, 46, 9, 9)
-        this.body.isCircle = true
+        this.body.setSize(150, 260, 20, 1)
+        this.body.isCircle = false
         var left = 0
         var right= game.width
         var up   = y
@@ -14,7 +15,10 @@ class Saw extends Phaser.Sprite {
         var hDelay = game.width/(200/1000)
         var vDelay = game.height/(200/1000)
         
-             game.add.tween(this)
+        
+       
+        
+            game.add.tween(this)
                     .to( { x: random, y: down }, speed, Phaser.Easing.Exponential.Out, true )
                     .loop(-1)
                     .start()
@@ -49,11 +53,11 @@ class Saw extends Phaser.Sprite {
                 .start()
         }*/
 
-        game.add.tween(this) //roda a serra
+        /*game.add.tween(this) //roda a serra
             .to( { angle: -359 }, 2000 )
             .loop(-1)
             .start()
-           
+           */
     } 
     
 

@@ -47,6 +47,8 @@ var enemySpawnDelay2 = 3000
 var gameOver
 var itens
 
+var timeritem
+
 
 var game = new Phaser.Game(config.RES_X, config.RES_Y, Phaser.CANVAS, 
     'game-container',
@@ -58,6 +60,7 @@ var game = new Phaser.Game(config.RES_X, config.RES_Y, Phaser.CANVAS,
     })
     
 function preload() {
+    game.load.image('itens', 'assets/Barrel (2).png')
     game.load.image('saw', 'assets/saw.png')
     game.load.image('sky', 'assets/sky.png')
     game.load.image('plane1', 'assets/Idle (1).png')
@@ -80,6 +83,7 @@ function createBullets() {
 function create() {
     game.physics.startSystem(Phaser.Physics.ARCADE)
     spawn()
+    spawnItens()
     //game.physics.arcade.gravity.y = 300;
     var skyWidth = game.cache.getImage('sky').width
     var skyHeight = game.cache.getImage('sky').height
@@ -97,6 +101,7 @@ function create() {
     
     obstacles = game.add.group()
     serras = game.add.group()
+    itens = game.add.group()
     createMap()
 
     player1 = new Player(game, game.width*2/9, game.height-85, 
@@ -135,6 +140,8 @@ function create() {
         
        
         }
+        hud.text3.visible = false
+        hud.text4.visible = false
     //createText()
     updateHud()
 
@@ -145,6 +152,12 @@ function create() {
     fullScreenButton.onDown.add(toggleFullScreen)
 
     game.time.advancedTiming = true;
+}
+
+function spawnItens(){
+    timeritem = game.time.create(true)
+    timeritem.loop(10000, spawnIten1, this)
+    timeritem.start()
 }
 
 function spawn (){
@@ -258,11 +271,19 @@ function updateBullets(bullets) {
     })
 }
 
-
+function spawnIten1(){
+    var aux = Math.floor((Math.random() * 639) + 1);
+    //console.log(player1.alive)    
+    if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
+                var item = new Bonus(game, aux, -30, 'itens', aux, enemyspeed1) 
+                game.add.existing(item)
+                itens.add(item)}
+      
+}
 
 function fireSaw1(){
     var aux = Math.floor((Math.random() * 639) + 1);
-    console.log(player1.alive)    
+    //console.log(player1.alive)    
     if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
                 var saw = new Saw(game, aux, -30, 'saw', aux, enemyspeed1) 
                 game.add.existing(saw)
@@ -272,9 +293,9 @@ function fireSaw1(){
 
 function fireSaw2(){
     var auxSpawn2 = 640 
-    console.log("antes de somar:"+auxSpawn2)
+    //console.log("antes de somar:"+auxSpawn2)
     auxSpawn2 += Math.floor((Math.random() * 640) + 1);    
-    console.log("dps de somar:"+auxSpawn2)
+    //console.log("dps de somar:"+auxSpawn2)
     if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
                 var saw = new Saw(game, auxSpawn2, -30, 'saw', auxSpawn2, enemyspeed2) 
                 game.add.existing(saw)
@@ -302,10 +323,10 @@ function update() {
     //updateBullets(player2.bullets)
 
     game.physics.arcade.collide(player1, player2)
-    game.physics.arcade.collide(
-        player1, obstacles, hitPlayer)
-    game.physics.arcade.collide(
-        player2, obstacles, hitPlayer)
+    game.physics.arcade.collide(player1, obstacles, hitPlayer)
+    game.physics.arcade.collide(player2, obstacles, hitPlayer)
+    game.physics.arcade.collide(player1, itens, greenBarrel)
+    game.physics.arcade.collide(player2, itens, greenBarrel)
 
     game.physics.arcade.collide(player1, map)
     game.physics.arcade.collide(player2, map)
@@ -313,7 +334,13 @@ function update() {
     game.physics.arcade.collide(player1, obstacles)
     game.physics.arcade.collide(player2, obstacles)
     game.physics.arcade.collide(obstacles, map, killBullet)
+    game.physics.arcade.collide(itens, map, killBarrel)
     
+}
+
+function killBarrel(saw, wall) {
+    //wall.kill()
+    saw.kill()
 }
 
 function killBullet(saw, wall) {
@@ -337,6 +364,15 @@ function hitPlayer(player, bullet) {
         updateHud()
     }
 }
+
+function greenBarrel(player, item) {
+    if (player.alive) {
+        player.health+= 10
+        item.kill()
+        updateHud()
+    }
+}
+
 
 function winner(){
     
@@ -378,9 +414,8 @@ function updateHud() {
 }
 
 function render() {
-    obstacles.forEach( function(obj) {
-        game.debug.body(obj)
-    })
+    obstacles.forEach( function(obj) {game.debug.body(obj)})
+    itens.forEach( function(obj) {game.debug.body(obj)})
     game.debug.body(player1)
     game.debug.body(player2)
 }
