@@ -50,7 +50,10 @@ var gameOver
 var itens
 var redBarrels
 var greenBarrels
-var timeritem
+var specialBarrels
+var timeritem1
+var timeritem2
+var timeritem3
 var special
 
 var game = new Phaser.Game(config.RES_X, config.RES_Y, Phaser.CANVAS, 
@@ -86,8 +89,6 @@ function createBullets() {
 
 function create() {
     game.physics.startSystem(Phaser.Physics.ARCADE)
-    spawn()
-    spawnItens()
     //game.physics.arcade.gravity.y = 300;
     var skyWidth = game.cache.getImage('sky').width
     var skyHeight = game.cache.getImage('sky').height
@@ -105,7 +106,7 @@ function create() {
     itens = game.add.group()
     greenBarrels = game.add.group()
     redBarrels = game.add.group()
-    special = game.add.group()
+    specialBarrels = game.add.group()
     createMap()
 
     player1 = new Player(game, game.width*2/9, game.height-85, 
@@ -159,12 +160,15 @@ function create() {
 }
 
 function spawnItens(){
-    timeritem = game.time.create(true)
-    timeritem.loop(10000, spawnGreenBarrel, this)
-    timeritem.start()
-    timeritem = game.time.create(true)
-    timeritem.loop(10000, spawnRedBarrel, this)
-    timeritem.start()
+    timeritem1 = game.time.create(true)
+    timeritem1.loop(5000, spawnGreenBarrel, this)
+    timeritem1.start()
+    timeritem2 = game.time.create(true)
+    timeritem2.loop(5000, spawnRedBarrel, this)
+    timeritem2.start()
+    timeritem3 = game.time.create(true)
+    timeritem3.loop(5000, spawnSpecialIten, this)
+    timeritem3.start()
 }
 
 function spawn (){
@@ -226,7 +230,8 @@ function createMap() {
             } 
         }
     }
-    
+    spawn()
+    spawnItens()   
 }
 
 function toggleFullScreen() {
@@ -282,16 +287,16 @@ function spawnGreenBarrel(){
     var aux = Math.floor((Math.random() * 639) + 1);
     var auxSpawn2 = 640
     auxSpawn2 += Math.floor((Math.random() * 639) + 1);
-    var chance = Math.floor((Math.random()*2)+1)
+    var chance = Math.floor((Math.random()*0)+0)
     //console.log(player1.alive)
-    if(chance == 1){    
+    if(chance == 0){    
     if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
-                var item = new Bonus(game, aux, -30, 'green', aux, enemyspeed1, #00ff00) 
+                var item = new Bonus(game, aux, -30, 'green', aux, enemyspeed1, 0x00FF00) 
                 game.add.existing(item)
                 greenBarrels.add(item)}
  
     if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
-                var item = new Bonus(game, auxSpawn2, -30, 'green', auxSpawn2, enemyspeed1, #00FF00) 
+                var item = new Bonus(game, auxSpawn2, -30, 'green', auxSpawn2, enemyspeed1, 0x00FF00) 
                 game.add.existing(item)
                 greenBarrels.add(item)}
     }
@@ -302,15 +307,15 @@ function spawnRedBarrel(){
     var auxSpawn2 = 640
     auxSpawn2 += Math.floor((Math.random() * 639) + 1);
     var chance = Math.floor((Math.random()*0)+0)
-    console.log('chance:' +chance)
+    console.log('chance red :' +chance)
     if(chance == 0){    
     if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
-                var item = new Bonus(game, aux, -30, 'red', aux, enemyspeed1, '#FF0000') 
+                var item = new Bonus(game, aux, -30, 'red', aux, enemyspeed1, 0xFF0000) 
                 game.add.existing(item)
                 redBarrels.add(item)}
  
     if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
-                var item = new Bonus(game, auxSpawn2, -30, 'red', auxSpawn2, enemyspeed1, '#FF0000') 
+                var item = new Bonus(game, auxSpawn2, -30, 'red', auxSpawn2, enemyspeed1, 0xFF0000) 
                 game.add.existing(item)
                 redBarrels.add(item)}
     }
@@ -321,21 +326,21 @@ function spawnSpecialIten(){
     var auxSpawn2 = 640
     auxSpawn2 += Math.floor((Math.random() * 639) + 1);
     var chance = Math.floor((Math.random()*0)+0)
-    console.log('chance:' +chance)
+    console.log('chance special:' +chance)
     if(chance == 0){    
     if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
-                var item = new Bonus(game, aux, -30, 'red', aux, enemyspeed1, #0000ff) 
+                var item = new Bonus(game, aux, -30, 'special', aux, enemyspeed1, 0xFFD700) 
                 game.add.existing(item)
-                redBarrels.add(item)}
+                specialBarrels.add(item)}
  
     if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
-                var item = new Bonus(game, auxSpawn2, -30, 'red', auxSpawn2, enemyspeed1, #0000ff) 
+                var item = new Bonus(game, auxSpawn2, -30, 'special', auxSpawn2, enemyspeed1, 0xFFD700) 
                 game.add.existing(item)
-                redBarrels.add(item)}
+                specialBarrels.add(item)}
     }
 }
 
-
+/*
 function spawnIten2(){
     var aux = Math.floor((Math.random() * 639) + 1);
     var auxSpawn2 
@@ -356,7 +361,7 @@ function spawnIten2(){
                 game.add.existing(item)
                 itens.add(item)}
     
-}
+}*/
 
 
 
@@ -410,6 +415,9 @@ function update() {
     game.physics.arcade.collide(player1, redBarrels, redBarrel)
     game.physics.arcade.collide(player2, redBarrels, redBarrel)
 
+    game.physics.arcade.collide(player2, specialBarrels, barrelSpecial1)
+    //game.physics.arcade.collide(player2, specialBarrels, barrelSpecial)
+
 
     game.physics.arcade.collide(player1, map)
     game.physics.arcade.collide(player2, map)
@@ -418,6 +426,9 @@ function update() {
     game.physics.arcade.collide(player2, obstacles)
     game.physics.arcade.collide(obstacles, map, killBullet)
     game.physics.arcade.collide(itens, map, killBarrel)
+    game.physics.arcade.collide(redBarrels, map, killBarrel)
+    game.physics.arcade.collide(greenBarrels, map, killBarrel)
+    game.physics.arcade.collide(specialBarrels, map, killBarrel)
     
 }
 
@@ -462,6 +473,31 @@ function greenBarrel(player, item) {
         item.kill()
         updateHud()
     }
+}
+
+function barrelSpecial1(player, item){
+    var aux = Math.floor((Math.random() * 639) + 1);
+    var aux2 = Math.floor((Math.random() * 639) + 1);
+    var aux3 = Math.floor((Math.random() * 639) + 1);
+    var aux4 = Math.floor((Math.random() * 639) + 1);
+    var aux5 = Math.floor((Math.random() * 639) + 1);
+
+    var saw = new Saw(game, aux, -30, 'saw', aux, enemyspeed1) 
+                game.add.existing(saw)
+                obstacles.add(saw)
+    var saw2 = new Saw(game, aux2, -30, 'saw', aux2, enemyspeed1) 
+                game.add.existing(saw)
+                obstacles.add(saw)
+    var saw3 = new Saw(game, aux3, -30, 'saw', aux3, enemyspeed1) 
+                game.add.existing(saw)
+                obstacles.add(saw)
+    var saw4 = new Saw(game, aux4, -30, 'saw', aux4, enemyspeed1) 
+                game.add.existing(saw)
+                obstacles.add(saw)
+    var saw5 = new Saw(game, aux5, -30, 'saw', aux5, enemyspeed1) 
+                game.add.existing(saw)
+                obstacles.add(saw)
+
 }
 
 function redBarrel(player, item) {
