@@ -28,6 +28,7 @@ config.BULLET_ANGLE_ERROR   = 0.1
 config.BULLET_LIFE_SPAN     = 750
 config.BULLET_VELOCITY      = 500
 
+var cor
 var sky
 var player1
 var player2
@@ -285,12 +286,12 @@ function spawnGreenBarrel(){
     //console.log(player1.alive)
     if(chance == 1){    
     if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
-                var item = new Bonus(game, aux, -30, 'green', aux, enemyspeed1) 
+                var item = new Bonus(game, aux, -30, 'green', aux, enemyspeed1, #00ff00) 
                 game.add.existing(item)
                 greenBarrels.add(item)}
  
     if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
-                var item = new Bonus(game, auxSpawn2, -30, 'green', auxSpawn2, enemyspeed1) 
+                var item = new Bonus(game, auxSpawn2, -30, 'green', auxSpawn2, enemyspeed1, #00FF00) 
                 game.add.existing(item)
                 greenBarrels.add(item)}
     }
@@ -304,12 +305,31 @@ function spawnRedBarrel(){
     console.log('chance:' +chance)
     if(chance == 0){    
     if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
-                var item = new Bonus(game, aux, -30, 'red', aux, enemyspeed1) 
+                var item = new Bonus(game, aux, -30, 'red', aux, enemyspeed1, '#FF0000') 
                 game.add.existing(item)
                 redBarrels.add(item)}
  
     if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
-                var item = new Bonus(game, auxSpawn2, -30, 'red', auxSpawn2, enemyspeed1) 
+                var item = new Bonus(game, auxSpawn2, -30, 'red', auxSpawn2, enemyspeed1, '#FF0000') 
+                game.add.existing(item)
+                redBarrels.add(item)}
+    }
+}
+
+function spawnSpecialIten(){
+    var aux = Math.floor((Math.random() * 639) + 1);
+    var auxSpawn2 = 640
+    auxSpawn2 += Math.floor((Math.random() * 639) + 1);
+    var chance = Math.floor((Math.random()*0)+0)
+    console.log('chance:' +chance)
+    if(chance == 0){    
+    if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
+                var item = new Bonus(game, aux, -30, 'red', aux, enemyspeed1, #0000ff) 
+                game.add.existing(item)
+                redBarrels.add(item)}
+ 
+    if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
+                var item = new Bonus(game, auxSpawn2, -30, 'red', auxSpawn2, enemyspeed1, #0000ff) 
                 game.add.existing(item)
                 redBarrels.add(item)}
     }
