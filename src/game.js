@@ -29,7 +29,6 @@ config.BULLET_LIFE_SPAN     = 750
 config.BULLET_VELOCITY      = 500
 
 var sky
-var fog
 var player1
 var player2
 var hud
@@ -44,11 +43,14 @@ var enemyspeed1 = 10000
 var enemyspeed2 = 10000
 var enemySpawnDelay1 = 3000
 var enemySpawnDelay2 = 3000
+var enemyDamage1 = 2
+var enemyDamage2 = 2
 var gameOver
 var itens
-
+var redBarrels
+var greenBarrels
 var timeritem
-
+var special
 
 var game = new Phaser.Game(config.RES_X, config.RES_Y, Phaser.CANVAS, 
     'game-container',
@@ -60,13 +62,14 @@ var game = new Phaser.Game(config.RES_X, config.RES_Y, Phaser.CANVAS,
     })
     
 function preload() {
-    game.load.image('itens', 'assets/Barrel (2).png')
+    game.load.image('red', 'assets/Barrel.png')
+    game.load.image('special', 'assets/Barrel.png')
+    game.load.image('green', 'assets/Barrel (2).png')
     game.load.image('saw', 'assets/saw.png')
     game.load.image('sky', 'assets/sky.png')
     game.load.image('plane1', 'assets/Idle (1).png')
     game.load.image('shot', 'assets/shot.png')
     game.load.image('wall', 'assets/wall.png')
-    game.load.image('fog', 'assets/fog.png')
     game.load.text('map1', 'assets/map1.txt');  // arquivo txt do mapa
 }
 
@@ -94,18 +97,18 @@ function create() {
 
     
 
-    fog = game.add.tileSprite(
-        0, 0, game.width, game.height, 'fog')
-    fog.tileScale.setTo(7,7)
-    fog.alpha = 0.4
+    
     
     obstacles = game.add.group()
     serras = game.add.group()
     itens = game.add.group()
+    greenBarrels = game.add.group()
+    redBarrels = game.add.group()
+    special = game.add.group()
     createMap()
 
     player1 = new Player(game, game.width*2/9, game.height-85, 
-                        'plane1', 0xff0000, createBullets(), {   
+                        'plane1', 0xff0000,true, {   
             left: Phaser.Keyboard.LEFT,
             right: Phaser.Keyboard.RIGHT,
             up: Phaser.Keyboard.UP,
@@ -113,7 +116,7 @@ function create() {
             fire: Phaser.Keyboard.L
         })
     player2 = new Player(game, game.width*7/9, game.height-85, 
-                        'plane1', 0x00ff00, createBullets(), {   
+                        'plane1', 0x00ff00,false, {   
             left: Phaser.Keyboard.A,
             right: Phaser.Keyboard.D,
             up: Phaser.Keyboard.W,
@@ -156,10 +159,10 @@ function create() {
 
 function spawnItens(){
     timeritem = game.time.create(true)
-    timeritem.loop(10000, spawnIten1, this)
+    timeritem.loop(10000, spawnGreenBarrel, this)
     timeritem.start()
     timeritem = game.time.create(true)
-    timeritem.loop(10000, spawnIten2, this)
+    timeritem.loop(10000, spawnRedBarrel, this)
     timeritem.start()
 }
 
@@ -274,11 +277,51 @@ function updateBullets(bullets) {
     })
 }
 
-function spawnIten1(){
+function spawnGreenBarrel(){
     var aux = Math.floor((Math.random() * 639) + 1);
+    var auxSpawn2 = 640
+    auxSpawn2 += Math.floor((Math.random() * 639) + 1);
+    var chance = Math.floor((Math.random()*2)+1)
+    //console.log(player1.alive)
+    if(chance == 1){    
+    if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
+                var item = new Bonus(game, aux, -30, 'green', aux, enemyspeed1) 
+                game.add.existing(item)
+                greenBarrels.add(item)}
+ 
+    if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
+                var item = new Bonus(game, auxSpawn2, -30, 'green', auxSpawn2, enemyspeed1) 
+                game.add.existing(item)
+                greenBarrels.add(item)}
+    }
+}
+
+function spawnRedBarrel(){
+    var aux = Math.floor((Math.random() * 639) + 1);
+    var auxSpawn2 = 640
+    auxSpawn2 += Math.floor((Math.random() * 639) + 1);
+    var chance = Math.floor((Math.random()*0)+0)
+    console.log('chance:' +chance)
+    if(chance == 0){    
+    if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
+                var item = new Bonus(game, aux, -30, 'red', aux, enemyspeed1) 
+                game.add.existing(item)
+                redBarrels.add(item)}
+ 
+    if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
+                var item = new Bonus(game, auxSpawn2, -30, 'red', auxSpawn2, enemyspeed1) 
+                game.add.existing(item)
+                redBarrels.add(item)}
+    }
+}
+
+
+function spawnIten2(){
+    var aux = Math.floor((Math.random() * 639) + 1);
+    var auxSpawn2 
     //console.log(player1.alive)    
     if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
-                var item = new Bonus(game, aux, -30, 'itens', aux, enemyspeed1) 
+                var item = new Bonus(game, aux, -30, 'green', aux, enemyspeed1) 
                 game.add.existing(item)
                 itens.add(item)}
       
@@ -292,7 +335,7 @@ function spawnIten2(){
                 var item = new Bonus(game, auxSpawn2, -30, 'itens', auxSpawn2, enemyspeed1) 
                 game.add.existing(item)
                 itens.add(item)}
-      
+    
 }
 
 
@@ -332,17 +375,21 @@ function update() {
     hud.fps.text = `FPS ${game.time.fps}`
 
     sky.tilePosition.x += 0.5
-    fog.tilePosition.x += 0.3
+    
  
     //moveAndStop(player1)
     //updateBullets(player1.bullets)
     //updateBullets(player2.bullets)
 
     game.physics.arcade.collide(player1, player2)
-    game.physics.arcade.collide(player1, obstacles, hitPlayer)
-    game.physics.arcade.collide(player2, obstacles, hitPlayer)
-    game.physics.arcade.collide(player1, itens, greenBarrel)
-    game.physics.arcade.collide(player2, itens, greenBarrel)
+    game.physics.arcade.collide(player1, obstacles, hitPlayer1)
+    game.physics.arcade.collide(player2, obstacles, hitPlayer2)
+    game.physics.arcade.collide(player1, greenBarrels, greenBarrel)
+    game.physics.arcade.collide(player2, greenBarrels, greenBarrel)
+
+    game.physics.arcade.collide(player1, redBarrels, redBarrel)
+    game.physics.arcade.collide(player2, redBarrels, redBarrel)
+
 
     game.physics.arcade.collide(player1, map)
     game.physics.arcade.collide(player2, map)
@@ -373,10 +420,18 @@ function killBullet(saw, wall) {
     updateHud()
 }
 
-function hitPlayer(player, bullet) {
+function hitPlayer1(player, saw) {
     if (player.alive) {
-        player.damage(15)
-        bullet.kill()
+        player.damage(enemyDamage1)
+        saw.kill()
+        updateHud()
+    }
+}
+
+function hitPlayer2(player, saw) {
+    if (player.alive) {
+        player.damage(enemyDamage2)
+        saw.kill()
         updateHud()
     }
 }
@@ -386,6 +441,24 @@ function greenBarrel(player, item) {
         player.health+= 10
         item.kill()
         updateHud()
+    }
+}
+
+function redBarrel(player, item) {
+    if (player.alive) {
+        if(player.player1){
+        console.log("inimigo dano2 "+enemyDamage2)
+        enemyDamage2 += 2
+        item.kill()
+        updateHud()
+    }
+    else {
+        console.log("inimigo dano1 "+enemyDamage1)
+        enemyDamage1+2
+        enemyDamage2 + 2
+        item.kill()
+        updateHud()
+    }
     }
 }
 
@@ -432,6 +505,8 @@ function updateHud() {
 function render() {
     obstacles.forEach( function(obj) {game.debug.body(obj)})
     itens.forEach( function(obj) {game.debug.body(obj)})
+    greenBarrels.forEach( function(obj) {game.debug.body(obj)})
+    redBarrels.forEach( function(obj) {game.debug.body(obj)})
     game.debug.body(player1)
     game.debug.body(player2)
 }

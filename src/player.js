@@ -1,9 +1,10 @@
 
 class Player extends Phaser.Sprite {
     
-    constructor(game, x, y, img, tint, bullets, keys) {
+    constructor(game, x, y, img, tint, flagp1,keys) {
         super(game, x, y, img)
         this.scale.setTo(0.2)
+        this.player1 = flagp1
         this.speedX = 10
         this.tint = tint
         this.health = config.PLAYER_HEALTH
@@ -26,7 +27,7 @@ class Player extends Phaser.Sprite {
             
         }
     
-        this.bullets = bullets
+        
     }        
 
     // move e rotaciona, como em Asteroids
@@ -60,30 +61,7 @@ class Player extends Phaser.Sprite {
      
     
     
-    fireBullet() {
-        if (!this.alive)
-            return;
-    
-        if (this.cursors.fire.isDown) {
-            if (this.game.time.time > this.nextFire) {
-                var bullet = this.bullets.getFirstExists(false)
-                if (bullet) {
-                    bullet.reset(this.x, this.y)
-                    bullet.lifespan = config.BULLET_LIFE_SPAN
-                    bullet.rotation = this.rotation
-                    bullet.body.bounce.setTo(1,1)
-                    bullet.body.friction.setTo(0,0)
-                    game.physics.arcade.velocityFromRotation(
-                        bullet.rotation + game.rnd.realInRange(-config.BULLET_ANGLE_ERROR, config.BULLET_ANGLE_ERROR), 
-                        config.BULLET_VELOCITY, bullet.body.velocity
-                    )
-                    // fire rate
-                    this.nextFire = this.game.time.time + config.BULLET_FIRE_RATE
-                }
-            }
-        }    
-    } 
-    
+       
     update() {
          
         this.moveAndTurn()
