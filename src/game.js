@@ -28,6 +28,7 @@ config.BULLET_ANGLE_ERROR   = 0.1
 config.BULLET_LIFE_SPAN     = 750
 config.BULLET_VELOCITY      = 500
 
+var paredes
 var cor
 var sky
 var player1
@@ -80,6 +81,7 @@ var game = new Phaser.Game(config.RES_X, config.RES_Y, Phaser.CANVAS,
     })
     
 function preload() {
+    game.load.image('parede', 'assets/barrel.png')
     game.load.image('red', 'assets/red.png')
     game.load.image('colecionavel1', 'assets/magic04ring.png')
     game.load.image('colecionavel2', 'assets/magic06necklace.png')
@@ -99,6 +101,7 @@ function preload() {
 
 
 function create() {
+    
     game.physics.startSystem(Phaser.Physics.ARCADE)
     //game.physics.arcade.gravity.y = 300;
     var skyWidth = game.cache.getImage('sky').width
@@ -123,6 +126,7 @@ function create() {
     purplePotions = game.add.group()
     colecionaveis1 = game.add.group()
     colecionaveis2 = game.add.group()
+    paredes = game.add.group()
     createMap()
  
     player1 = new Player(game, game.width*2/9, game.height-85, 
@@ -142,7 +146,7 @@ function create() {
             fire: Phaser.Keyboard.G
         })
         game.physics.enable(player1, Phaser.Physics.ARCADE);
-        game.physics.arcade.gravity.y = 150
+        //game.physics.arcade.gravity.y = 150
         player1.body.gravity.y = 750;
         player2.body.gravity.y = 750;
         game.add.existing(player1)
@@ -172,9 +176,11 @@ function create() {
 
     var fullScreenButton = game.input.keyboard.addKey(Phaser.Keyboard.ONE)
     fullScreenButton.onDown.add(toggleFullScreen)
-    
+    spawnparede()
     game.time.advancedTiming = true;
 }
+
+
 
 function startLevel(){
     timerlevel = game.time.create(true)
@@ -272,14 +278,19 @@ function createMap() {
                 floor.body.allowGravity = false
                 floor.body.immovable = true
                 floor.tag = 'floor'
+                
             }
             else if (tipo == 'W') {
                 var wall = map.create(col*32, row*32, 'wall')
-                wall.scale.setTo(1.2, 1.2)
-                game.physics.arcade.enable(wall)
+                wall.scale.setTo(0.5, 0.5)
+                
+                game.physics.enable(wall, Phaser.Physics.ARCADE);
+
                 wall.body.allowGravity = false
                 wall.body.immovable = true
                 wall.tag = 'wall'
+                wall.alpha = 0
+                
             } 
         }
     }
@@ -565,11 +576,11 @@ function fireArrow2(){
 function update() {
     
     upLevel()
-    
+    sky.tilePosition.x += 0.5
     
     hud.fps.text = `FPS ${game.time.fps}`
 
-   
+    
 
     game.physics.arcade.collide(player1, player2)
     game.physics.arcade.collide(player1, obstacles, hitPlayer1)
@@ -585,6 +596,13 @@ function update() {
     
     game.physics.arcade.collide(player1, purplePotions, potionPurple1)
     game.physics.arcade.collide(player2, purplePotions, potionPurple2)
+
+    
+
+    game.physics.arcade.collide(map, player1)
+    game.physics.arcade.collide(map, player2)
+
+    
     
     game.physics.arcade.collide(player1, colecionaveis1, colecionavelScore1)
     game.physics.arcade.collide(player2, colecionaveis1, colecionavelScore1)
@@ -593,9 +611,11 @@ function update() {
     game.physics.arcade.collide(player1, colecionaveis2, colecionavelScore2)
     game.physics.arcade.collide(player2, colecionaveis2, colecionavelScore2)
 
-
+    //console.log(player.checkcolli)
     game.physics.arcade.collide(player1, map)
     game.physics.arcade.collide(player2, map)
+    
+    
     
     
     game.physics.arcade.collide(player1, obstacles)
@@ -847,7 +867,9 @@ function updateHud() {
 }
 
 function render() {
+    //paredes.forEach( function(obj) {game.debug.body(obj)})
     map.forEach( function(obj) {game.debug.body(obj)})
+    //paredes.forEach( function(obj) {game.debug.body(obj)})
    // obstacles.forEach( function(obj) {game.debug.body(obj)})
    // specialPotions.forEach( function(obj) {game.debug.body(obj)})
    // itens.forEach( function(obj) {game.debug.body(obj)})

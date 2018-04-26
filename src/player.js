@@ -9,7 +9,9 @@ class Player extends Phaser.Sprite {
         this.flag = flagp1
         this.health = config.PLAYER_HEALTH
         this.anchor.setTo(0.5, 0.5)
-        game.physics.arcade.enable(this)
+        game.physics.arcade.enable(this)                
+        this.body.setSize(435, 600, 70,50) //1°: comprimento direta esquerda    2° cumprimento cima baixo  3°:   4°:
+        
         //this.body.drag.set(config.PLAYER_DRAG)
         this.body.maxVelocity.set(550)
         this.body.isCircle = false
