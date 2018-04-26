@@ -42,22 +42,26 @@ var scorep1 = 0
 var scorep2 = 0
 var enemyspeed1 = 10000
 var enemyspeed2 = 10000
-var enemySpawnDelay1 = 3000
-var enemySpawnDelay2 = 3000
+var enemySpawnDelay1 = 5000
+var enemySpawnDelay2 = 5000
 var enemyDamage1 = 2
 var enemyDamage2 = 2
 var gameOver
 var itens
-var redBarrels
-var greenBarrels
-var specialBarrels
+var redPotions
+var greenPotions
+var specialPotions
+var purplePotions
 var timeritem1
 var timeritem2
 var timeritem3
+var timeritem4
 var special
 var gameLevel = 1
 var textLevel
 var flagUpLevel = false
+var music
+
 
 var game = new Phaser.Game(config.RES_X, config.RES_Y, Phaser.CANVAS, 
     'game-container',
@@ -70,26 +74,20 @@ var game = new Phaser.Game(config.RES_X, config.RES_Y, Phaser.CANVAS,
     })
     
 function preload() {
-    game.load.image('red', 'assets/Barrel.png')
-    game.load.image('special', 'assets/Barrel.png')
-    game.load.image('green', 'assets/Barrel (2).png')
-    game.load.image('saw', 'assets/saw.png')
-    game.load.image('sky', 'assets/sky.png')
+    game.load.image('red', 'assets/red.png')
+    game.load.image('purple', 'assets/purple.png')
+    game.load.image('special', 'assets/yellow.png')
+    game.load.image('green', 'assets/green.png')
+    game.load.image('arrow', 'assets/transparent.png')
+    game.load.image('sky', 'assets/thumb-1920-911840 (1).png')
     game.load.image('plane1', 'assets/Idle (1).png')
     game.load.image('shot', 'assets/shot.png')
+    game.load.image('floor','assets/wall.png' )
     game.load.image('wall', 'assets/wall.png')
     game.load.text('map1', 'assets/map1.txt');  // arquivo txt do mapa
+    game.load.audio('bgsong', 'assets/audio/01 Monody (feat. Laura Brehm).mp3')
 }
 
-function createBullets() {
-    var bullets = game.add.group()
-    bullets.enableBody = true
-    bullets.physicsBodyType = Phaser.Physics.ARCADE
-    bullets.createMultiple(10, 'shot')
-    bullets.setAll('anchor.x', 0.5)
-    bullets.setAll('anchor.y', 0.5)
-    return bullets
-}
 
 function create() {
     game.physics.startSystem(Phaser.Physics.ARCADE)
@@ -100,7 +98,9 @@ function create() {
         0, 0, skyWidth, skyHeight, 'sky')
     sky.scale.x = game.width/sky.width
     sky.scale.y = game.height/sky.height
-
+    music = game.add.audio('bgsong');
+    music.play()
+    music.volume = 0.03
     
 
     
@@ -108,13 +108,14 @@ function create() {
     obstacles = game.add.group()
     serras = game.add.group()
     itens = game.add.group()
-    greenBarrels = game.add.group()
-    redBarrels = game.add.group()
-    specialBarrels = game.add.group()
+    greenPotions = game.add.group()
+    redPotions = game.add.group()
+    specialPotions = game.add.group()
+    purplePotions = game.add.group()
     createMap()
  
     player1 = new Player(game, game.width*2/9, game.height-85, 
-                        'plane1', 0xff0000,true, {   
+                        'plane1', true, {   
             left: Phaser.Keyboard.LEFT,
             right: Phaser.Keyboard.RIGHT,
             up: Phaser.Keyboard.UP,
@@ -122,7 +123,7 @@ function create() {
             fire: Phaser.Keyboard.L
         })
     player2 = new Player(game, game.width*7/9, game.height-85, 
-                        'plane1', 0x00ff00,false, {   
+                        'plane1',false, {   
             left: Phaser.Keyboard.A,
             right: Phaser.Keyboard.D,
             up: Phaser.Keyboard.W,
@@ -166,23 +167,26 @@ function create() {
 
 function spawnItens(){
     timeritem1 = game.time.create(true)
-    timeritem1.loop(5000, spawnGreenBarrel, this)
+    timeritem1.loop(5000, spawnGreenPotion, this)
     timeritem1.start()
     timeritem2 = game.time.create(true)
-    timeritem2.loop(5000, spawnRedBarrel, this)
+    timeritem2.loop(5000, spawnRedPotion, this)
     timeritem2.start()
     timeritem3 = game.time.create(true)
     timeritem3.loop(5000, spawnSpecialIten, this)
     timeritem3.start()
+    timeritem4 = game.time.create(true)
+    timeritem4.loop(5000, spawnPurpleIten, this)
+    timeritem4.start()
 }
 
 function spawn (){
 
     timer1 = game.time.create(true);
-    timer1.loop(enemySpawnDelay1, fireSaw1, this);
+    timer1.loop(enemySpawnDelay1, fireArrow1, this);
     timer1.start()
     timer2 = game.time.create(true);
-    timer2.loop(enemySpawnDelay2, fireSaw2, this);
+    timer2.loop(enemySpawnDelay2, fireArrow2, this);
     timer2.start()
 
 }
@@ -226,8 +230,16 @@ function createMap() {
                 param = mapData[row][col+1]
             }
             if (tipo == 'X') {
+                var floor = map.create(col*32, row*32, 'floor')
+                floor.scale.setTo(0.5, 0.5)
+                game.physics.arcade.enable(floor)
+                floor.body.allowGravity = false
+                floor.body.immovable = true
+                floor.tag = 'floor'
+            }
+            else if (tipo == 'W') {
                 var wall = map.create(col*32, row*32, 'wall')
-                wall.scale.setTo(0.5, 0.5)
+                wall.scale.setTo(1.2, 1.2)
                 game.physics.arcade.enable(wall)
                 wall.body.allowGravity = false
                 wall.body.immovable = true
@@ -282,13 +294,9 @@ function createHealthText(x, y, text) {
     return text
 }
 
-function updateBullets(bullets) {
-    bullets.forEach(function(bullet) {
-        game.world.wrap(bullet, 0, true)
-    })
-}
 
-function spawnGreenBarrel(){
+
+function spawnGreenPotion(){
     var aux = Math.floor((Math.random() * 639) + 1);
     var auxSpawn2 = 640
     auxSpawn2 += Math.floor((Math.random() * 639) + 1);
@@ -296,33 +304,33 @@ function spawnGreenBarrel(){
     //console.log(player1.alive)
     if(chance == 0){    
     if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
-                var item = new Bonus(game, aux, -30, 'green', aux, enemyspeed1, 0x00FF00) 
+                var item = new Bonus(game, aux, -30, 'green', aux, enemyspeed1) 
                 game.add.existing(item)
-                greenBarrels.add(item)}
+                greenPotions.add(item)}
  
     if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
-                var item = new Bonus(game, auxSpawn2, -30, 'green', auxSpawn2, enemyspeed1, 0x00FF00) 
+                var item = new Bonus(game, auxSpawn2, -30, 'green', auxSpawn2, enemyspeed1) 
                 game.add.existing(item)
-                greenBarrels.add(item)}
+                greenPotions.add(item)}
     }
 }
 
-function spawnRedBarrel(){
+function spawnRedPotion(){
     var aux = Math.floor((Math.random() * 639) + 1);
     var auxSpawn2 = 640
     auxSpawn2 += Math.floor((Math.random() * 639) + 1);
     var chance = Math.floor((Math.random()*0)+0)
-    console.log('chance red :' +chance)
+    //console.log('chance red :' +chance)
     if(chance == 0){    
     if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
-                var item = new Bonus(game, aux, -30, 'red', aux, enemyspeed1, 0xFF0000) 
+                var item = new Bonus(game, aux, -30, 'red', aux, enemyspeed1 ) 
                 game.add.existing(item)
-                redBarrels.add(item)}
+                redPotions.add(item)}
  
     if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
-                var item = new Bonus(game, auxSpawn2, -30, 'red', auxSpawn2, enemyspeed1, 0xFF0000) 
+                var item = new Bonus(game, auxSpawn2, -30, 'red', auxSpawn2, enemyspeed1) 
                 game.add.existing(item)
-                redBarrels.add(item)}
+                redPotions.add(item)}
     }
 }
 
@@ -331,17 +339,37 @@ function spawnSpecialIten(){
     var auxSpawn2 = 640
     auxSpawn2 += Math.floor((Math.random() * 639) + 1);
     var chance = Math.floor((Math.random()*0)+0)
-    console.log('chance special:' +chance)
+    //console.log('chance special:' +chance)
     if(chance == 0){    
     if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
-                var item = new Bonus(game, aux, -30, 'special', aux, enemyspeed1, 0xFFD700) 
+                var item = new Bonus(game, aux, -30, 'special', aux, enemyspeed1 ) 
                 game.add.existing(item)
-                specialBarrels.add(item)}
+                specialPotions.add(item)}
  
     if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
-                var item = new Bonus(game, auxSpawn2, -30, 'special', auxSpawn2, enemyspeed1, 0xFFD700) 
+                var item = new Bonus(game, auxSpawn2, -30, 'special', auxSpawn2, enemyspeed1) 
                 game.add.existing(item)
-                specialBarrels.add(item)}
+                specialPotions.add(item)}
+    }
+}
+
+
+function spawnPurpleIten(){
+    var aux = Math.floor((Math.random() * 639) + 1);
+    var auxSpawn2 = 640
+    auxSpawn2 += Math.floor((Math.random() * 639) + 1);
+    var chance = Math.floor((Math.random()*0)+0)
+    //console.log('chance special:' +chance)
+    if(chance == 0){    
+    if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
+                var item = new Bonus(game, aux, -30, 'purple', aux, enemyspeed1 ) 
+                game.add.existing(item)
+                purplePotions.add(item)}
+ 
+    if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
+                var item = new Bonus(game, auxSpawn2, -30, 'purple', auxSpawn2, enemyspeed1) 
+                game.add.existing(item)
+                purplePotions.add(item)}
     }
 }
 
@@ -370,33 +398,61 @@ function spawnIten2(){
 
 
 
-function fireSaw1(){
+function fireArrow1(){
     var aux = Math.floor((Math.random() * 639) + 1);
     //console.log(player1.alive)    
     if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
-                var saw = new Saw(game, aux, -30, 'saw', aux, enemyspeed1) 
-                game.add.existing(saw)
-                obstacles.add(saw)}
+                var arrow = new Arrow(game, aux, -30, 'arrow', aux, enemyspeed1) 
+                game.add.existing(arrow)
+                obstacles.add(arrow)}
       
 }
 
 function cleanEnemy(){
-    obstacles.forEach(function(saw){
-        if(!saw.alive){
-        saw.destroy();
+    obstacles.forEach(function(arrow){
+        if(!arrow.alive){
+        arrow.destroy();
+        }
+    })
+    redPotions.forEach(function(item){
+        if(!item.alive){
+        item.destroy();
+        }
+    })
+    greenPotions.forEach(function(item){
+        if(!item.alive){
+        item.destroy();
+        }
+    })
+    specialPotions.forEach(function(item){
+        if(!item.alive){
+        item.destroy();
+        }
+    })
+    purplePotions.forEach(function(item){
+        if(!item.alive){
+        item.destroy();
         }
     })
 }
 
-function fireSaw2(){
+function cleanItens(){
+    itens.forEach(function(item){
+        if(!item.alive){
+        item.destroy();
+        }
+    })
+}
+
+function fireArrow2(){
     var auxSpawn2 = 640 
     //console.log("antes de somar:"+auxSpawn2)
     auxSpawn2 += Math.floor((Math.random() * 640) + 1);    
     //console.log("dps de somar:"+auxSpawn2)
     if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
-                var saw = new Saw(game, auxSpawn2, -30, 'saw', auxSpawn2, enemyspeed2) 
-                game.add.existing(saw)
-                obstacles.add(saw)}
+                var arrow = new Arrow(game, auxSpawn2, -30, 'arrow', auxSpawn2, enemyspeed2) 
+                game.add.existing(arrow)
+                obstacles.add(arrow)}
       
 }
     
@@ -406,13 +462,13 @@ function update() {
    /* console.log(aux3)
     var aux2 = Math.floor((Math.random() * 1280) + 1);
     if(aux2 < 10){ 
-    fireSaw()
+    firearrow()
     }*/
     
     
     hud.fps.text = `FPS ${game.time.fps}`
 
-    sky.tilePosition.x += 0.5
+   // sky.tilePosition.x += 0.5
     
  
     //moveAndStop(player1)
@@ -422,67 +478,72 @@ function update() {
     game.physics.arcade.collide(player1, player2)
     game.physics.arcade.collide(player1, obstacles, hitPlayer1)
     game.physics.arcade.collide(player2, obstacles, hitPlayer2)
-    game.physics.arcade.collide(player1, greenBarrels, greenBarrel)
-    game.physics.arcade.collide(player2, greenBarrels, greenBarrel)
+    game.physics.arcade.collide(player1, greenPotions, greenPotion)
+    game.physics.arcade.collide(player2, greenPotions, greenPotion)
 
-    game.physics.arcade.collide(player1, redBarrels, redBarrel)
-    game.physics.arcade.collide(player2, redBarrels, redBarrel)
+    game.physics.arcade.collide(player1, redPotions, redPotion)
+    game.physics.arcade.collide(player2, redPotions, redPotion)
 
-    game.physics.arcade.collide(player2, specialBarrels, barrelSpecial1)
-    //game.physics.arcade.collide(player2, specialBarrels, barrelSpecial)
+    game.physics.arcade.collide(player1, specialPotions, yellowPotion1)
+    game.physics.arcade.collide(player2, specialPotions, yellowPotion2)
+    
+    game.physics.arcade.collide(player1, purplePotions, potionPurple1)
+    game.physics.arcade.collide(player2, purplePotions, potionPurple2)
 
 
     game.physics.arcade.collide(player1, map)
     game.physics.arcade.collide(player2, map)
     
+    
     game.physics.arcade.collide(player1, obstacles)
     game.physics.arcade.collide(player2, obstacles)
-    game.physics.arcade.collide(obstacles, map, killBullet)
-    game.physics.arcade.collide(itens, map, killBarrel)
-    game.physics.arcade.collide(redBarrels, map, killBarrel)
-    game.physics.arcade.collide(greenBarrels, map, killBarrel)
-    game.physics.arcade.collide(specialBarrels, map, killBarrel)
+    game.physics.arcade.collide(obstacles, map, killPotion)
+    game.physics.arcade.collide(itens, map, killPotion)
+    game.physics.arcade.collide(redPotions, map, killPotion)
+    game.physics.arcade.collide(greenPotions, map, killPotion)
+    game.physics.arcade.collide(specialPotions, map, killPotion)
+    game.physics.arcade.collide(purplePotions, map, killPotion)
     cleanEnemy()   
 }
 
-function killBarrel(item, wall) {
+function killPotion(item, wall) {
     //wall.kill()
     item.kill()
 }
 
-function killBullet(saw, wall) {
+function killArrow(arrow, wall) {
     //wall.kill()
-    saw.kill()
+    arrow.kill()
     
-    if(saw.body.x < 639){
+    if(arrow.body.x < 639){
         scorep1 += 5
     }
-    else if (saw.body.x > 641){
+    else if (arrow.body.x > 641){
         scorep2 += 5
     }
-    saw.destroy
-    //console.log("X:"+saw.body.x)
-    //saw.kill()
+    arrow.destroy
+    //console.log("X:"+arrow.body.x)
+    //arrow.kill()
     updateHud()
 }
 
-function hitPlayer1(player, saw) {
+function hitPlayer1(player, arrow) {
     if (player.alive) {
         player.damage(enemyDamage1)
-        saw.kill()
+        arrow.kill()
         updateHud()
     }
 }
 
-function hitPlayer2(player, saw) {
+function hitPlayer2(player, arrow) {
     if (player.alive) {
         player.damage(enemyDamage2)
-        saw.kill()
+        arrow.kill()
         updateHud()
     }
 }
 
-function greenBarrel(player, item) {
+function greenPotion(player, item) {
     if (player.alive) {
         player.health+= 10
         item.kill()
@@ -490,71 +551,91 @@ function greenBarrel(player, item) {
     }
 }
 
-function barrelSpecial1(player, item){
+function potionPurple1(player, item){
+    
+        if (player.alive) {
+            if(player.player1){
+            //console.log("inimigo dano2 "+enemyDamage2)
+            enemyspeed2 -= 1000
+            enemySpawnDelay2 -=500
+            item.kill()
+            updateHud()}
+        }
+}
+
+function potionPurple2(){
+    enemyspeed1 -= 1000
+    enemySpawnDelay1-= 500
+    gameLevel += 1
+    flagUpLevel = false
+
+}
+
+function yellowPotion2(){
     var aux = Math.floor((Math.random() * 639) + 1);
     var aux2 = Math.floor((Math.random() * 639) + 1);
     var aux3 = Math.floor((Math.random() * 639) + 1);
     var aux4 = Math.floor((Math.random() * 639) + 1);
     var aux5 = Math.floor((Math.random() * 639) + 1);
-
-    var saw = new Saw(game, aux, -30, 'saw', aux, enemyspeed1) 
-                game.add.existing(saw)
-                obstacles.add(saw)
-    var saw2 = new Saw(game, aux2, -30, 'saw', aux2, enemyspeed1) 
-                game.add.existing(saw)
-                obstacles.add(saw)
-    var saw3 = new Saw(game, aux3, -30, 'saw', aux3, enemyspeed1) 
-                game.add.existing(saw)
-                obstacles.add(saw)
-    var saw4 = new Saw(game, aux4, -30, 'saw', aux4, enemyspeed1) 
-                game.add.existing(saw)
-                obstacles.add(saw)
-    var saw5 = new Saw(game, aux5, -30, 'saw', aux5, enemyspeed1) 
-                game.add.existing(saw)
-                obstacles.add(saw)
+    //console.log('POTIONSPECIAL2' + 'aux '+aux + ' aux2 '+aux2+' aux3 '+aux3+' aux4 '+aux4+' aux5 '+aux5);
+    var arrow = new Arrow(game, aux, -30, 'arrow', aux, enemyspeed1) 
+                game.add.existing(arrow)
+                obstacles.add(arrow)
+    var arrow2 = new Arrow(game, aux2, -30, 'arrow', aux2, enemyspeed1) 
+                game.add.existing(arrow)
+                obstacles.add(arrow)
+    var arrow3 = new Arrow(game, aux3, -30, 'arrow', aux3, enemyspeed1) 
+                game.add.existing(arrow)
+                obstacles.add(arrow)
+    var arrow4 = new Arrow(game, aux4, -30, 'arrow', aux4, enemyspeed1) 
+                game.add.existing(arrow)
+                obstacles.add(arrow)
+    var arrow5 = new Arrow(game, aux5, -30, 'arrow', aux5, enemyspeed1) 
+                game.add.existing(arrow)
+                obstacles.add(arrow)
 
 }
 
-function barrelSpecial2(player, item){
+function yellowPotion1(){
    var aux2= 640 
    var aux3= 640 
    var aux4= 640
    var aux5= 640
    var aux = 640
-    var aux = Math.floor((Math.random() * 639) + 1);
-    var aux2 = Math.floor((Math.random() * 639) + 1);
-    var aux3 = Math.floor((Math.random() * 639) + 1);
-    var aux4 = Math.floor((Math.random() * 639) + 1);
-    var aux5 = Math.floor((Math.random() * 639) + 1);
-
-    var saw = new Saw(game, aux, -30, 'saw', aux, enemyspeed1) 
-                game.add.existing(saw)
-                obstacles.add(saw)
-    var saw2 = new Saw(game, aux2, -30, 'saw', aux2, enemyspeed1) 
-                game.add.existing(saw)
-                obstacles.add(saw)
-    var saw3 = new Saw(game, aux3, -30, 'saw', aux3, enemyspeed1) 
-                game.add.existing(saw)
-                obstacles.add(saw)
-    var saw4 = new Saw(game, aux4, -30, 'saw', aux4, enemyspeed1) 
-                game.add.existing(saw)
-                obstacles.add(saw)
-    var saw5 = new Saw(game, aux5, -30, 'saw', aux5, enemyspeed1) 
-                game.add.existing(saw)
-                obstacles.add(saw)
+    var aux = Math.floor((Math.random() * 1280) + 640);
+    var aux2 = Math.floor((Math.random() * 1280) + 640);
+    var aux3 = Math.floor((Math.random() * 1280) + 640);
+    var aux4 = Math.floor((Math.random() * 1280) + 640);
+    var aux5 = Math.floor((Math.random() * 1280) + 640);
+    //console.log('POTIONSPECIAL2' + 'aux '+aux + ' aux2 '+aux2+' aux3 '+aux3+' aux4 '+aux4+' aux5 '+aux5);
+    var arrow = new Arrow(game, aux, -30, 'arrow', aux, enemyspeed1) 
+                game.add.existing(arrow)
+                obstacles.add(arrow)
+    var arrow2 = new Arrow(game, aux2, -30, 'arrow', aux2, enemyspeed1) 
+                game.add.existing(arrow)
+                obstacles.add(arrow)
+    var arrow3 = new Arrow(game, aux3, -30, 'arrow', aux3, enemyspeed1) 
+                game.add.existing(arrow)
+                obstacles.add(arrow)
+    var arrow4 = new Arrow(game, aux4, -30, 'arrow', aux4, enemyspeed1) 
+                game.add.existing(arrow)
+                obstacles.add(arrow)
+    var arrow5 = new Arrow(game, aux5, -30, 'arrow', aux5, enemyspeed1) 
+                game.add.existing(arrow)
+                obstacles.add(arrow)
 
 }
 
-function redBarrel(player, item) {
+function redPotion(player, item) {
     if (player.alive) {
         if(player.player1){
-        console.log("inimigo dano2 "+enemyDamage2)
+        //console.log("inimigo dano2 "+enemyDamage2)
         enemyDamage2 += 2
         item.kill()
         updateHud()
     }
     else {
-        console.log("inimigo dano1 "+enemyDamage1)
+        //console.log("inimigo dano1 "+enemyDamage1)
         enemyDamage1+2
         enemyDamage2 + 2
         item.kill()
@@ -620,10 +701,12 @@ function updateHud() {
 }
 
 function render() {
+    map.forEach( function(obj) {game.debug.body(obj)})
     obstacles.forEach( function(obj) {game.debug.body(obj)})
+    specialPotions.forEach( function(obj) {game.debug.body(obj)})
     itens.forEach( function(obj) {game.debug.body(obj)})
-    greenBarrels.forEach( function(obj) {game.debug.body(obj)})
-    redBarrels.forEach( function(obj) {game.debug.body(obj)})
+    greenPotions.forEach( function(obj) {game.debug.body(obj)})
+    redPotions.forEach( function(obj) {game.debug.body(obj)})
     game.debug.body(player1)
     game.debug.body(player2)
 }

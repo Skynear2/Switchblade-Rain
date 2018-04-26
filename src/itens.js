@@ -1,12 +1,11 @@
 
 class Bonus extends Phaser.Sprite {
-    constructor(game, x, y, img, random, speed, tint) {
+    constructor(game, x, y, img, random, speed) {
         super(game, x, y, img)
-        this.scale.setTo(0.25, 0.25)
+        this.scale.setTo(1.5, 1.5)
         this.anchor.setTo(0.2, 0.3)
         game.physics.arcade.enable(this)
-        this.tint = tint
-        this.body.setSize(150, 260, 20, 1)
+        this.body.setSize(30, 30, 0, 7) //1°: comprimento direta esquerda    2° cumprimento cima baixo  3°:   4°:
         this.body.isCircle = false
         var left = 0
         var right= game.width

@@ -1,12 +1,12 @@
 
 class Player extends Phaser.Sprite {
     
-    constructor(game, x, y, img, tint, flagp1,keys) {
+    constructor(game, x, y, img, flagp1,keys) {
         super(game, x, y, img)
         this.scale.setTo(0.2)
         this.player1 = flagp1
         this.speedX = 10
-        this.tint = tint
+        this.flag = flagp1
         this.health = config.PLAYER_HEALTH
         this.anchor.setTo(0.5, 0.5)
         game.physics.arcade.enable(this)
@@ -37,12 +37,12 @@ class Player extends Phaser.Sprite {
 
         // rotaciona
         if (this.cursors.left.isDown) {
-            //this.body.x += -this.speedX
-            this.body.velocity.x = -250
+            this.body.x += -this.speedX
+            //this.body.velocity.x = -250
         } else
         if (this.cursors.right.isDown) {
-            this.body.velocity.x = 250
-            //this.body.x += this.speedX
+           // this.body.velocity.x = 250
+            this.body.x += this.speedX
         }
         //console.log(this.body.onWall())
         //&& this.body.onFloor()
