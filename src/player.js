@@ -11,7 +11,7 @@ class Player extends Phaser.Sprite {
         this.anchor.setTo(0.5, 0.5)
         game.physics.arcade.enable(this)
         //this.body.drag.set(config.PLAYER_DRAG)
-        //this.body.maxVelocity.set(config.PLAYER_MAX_VELOCITY)
+        this.body.maxVelocity.set(550)
         this.body.isCircle = false
         //this.body.mass = 1
         this.body.friction.setTo(0,0)
@@ -48,7 +48,7 @@ class Player extends Phaser.Sprite {
         //&& this.body.onFloor()
         if(this.cursors.up.isDown  && game.time.now > this.jumpTimer){
             this.body.velocity.y = -2000000;
-            this.jumpTimer = game.time.now + 1750;
+            this.jumpTimer = game.time.now + 1300;
         }
          
 
@@ -63,7 +63,7 @@ class Player extends Phaser.Sprite {
     
        
     update() {
-         
+        console.log(this.x) 
         this.moveAndTurn()
         //this.fireBullet()
     }

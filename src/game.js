@@ -40,6 +40,7 @@ var timer1
 var timer2
 var scorep1 = 0
 var scorep2 = 0
+var itemspeed = 10000
 var enemyspeed1 = 10000
 var enemyspeed2 = 10000
 var enemySpawnDelay1 = 5000
@@ -56,11 +57,16 @@ var timeritem1
 var timeritem2
 var timeritem3
 var timeritem4
+var timeritem5
+var timeritem6
 var special
 var gameLevel = 1
 var textLevel
 var flagUpLevel = false
 var music
+var colecionaveis1
+var colecionaveis2
+var timerlevel
 
 
 var game = new Phaser.Game(config.RES_X, config.RES_Y, Phaser.CANVAS, 
@@ -75,6 +81,8 @@ var game = new Phaser.Game(config.RES_X, config.RES_Y, Phaser.CANVAS,
     
 function preload() {
     game.load.image('red', 'assets/red.png')
+    game.load.image('colecionavel1', 'assets/magic04ring.png')
+    game.load.image('colecionavel2', 'assets/magic06necklace.png')
     game.load.image('purple', 'assets/purple.png')
     game.load.image('special', 'assets/yellow.png')
     game.load.image('green', 'assets/green.png')
@@ -85,6 +93,7 @@ function preload() {
     game.load.image('floor','assets/wall.png' )
     game.load.image('wall', 'assets/wall.png')
     game.load.text('map1', 'assets/map1.txt');  // arquivo txt do mapa
+    
     game.load.audio('bgsong', 'assets/audio/01 Monody (feat. Laura Brehm).mp3')
 }
 
@@ -101,7 +110,7 @@ function create() {
     music = game.add.audio('bgsong');
     music.play()
     music.volume = 0.03
-    
+    startLevel()
 
     
     
@@ -112,6 +121,8 @@ function create() {
     redPotions = game.add.group()
     specialPotions = game.add.group()
     purplePotions = game.add.group()
+    colecionaveis1 = game.add.group()
+    colecionaveis2 = game.add.group()
     createMap()
  
     player1 = new Player(game, game.width*2/9, game.height-85, 
@@ -132,8 +143,8 @@ function create() {
         })
         game.physics.enable(player1, Phaser.Physics.ARCADE);
         game.physics.arcade.gravity.y = 150
-        player1.body.gravity.y = 550;
-        player2.body.gravity.y = 550;
+        player1.body.gravity.y = 750;
+        player2.body.gravity.y = 750;
         game.add.existing(player1)
     game.add.existing(player2)
     player2.scale.x *= -1;
@@ -161,8 +172,15 @@ function create() {
 
     var fullScreenButton = game.input.keyboard.addKey(Phaser.Keyboard.ONE)
     fullScreenButton.onDown.add(toggleFullScreen)
-    upLevel()
+    
     game.time.advancedTiming = true;
+}
+
+function startLevel(){
+    timerlevel = game.time.create(true)
+    timerlevel.loop(5000, subirNivel, this)
+    timerlevel.start()
+
 }
 
 function spawnItens(){
@@ -178,6 +196,12 @@ function spawnItens(){
     timeritem4 = game.time.create(true)
     timeritem4.loop(5000, spawnPurpleIten, this)
     timeritem4.start()
+    timeritem5 = game.time.create(true)
+    timeritem5.loop(5000, spawnColecionavel1, this)
+    timeritem5.start()
+    timeritem6 = game.time.create(true)
+    timeritem6.loop(5000, spawnColecionavel2, this)
+    timeritem6.start()
 }
 
 function spawn (){
@@ -191,26 +215,38 @@ function spawn (){
 
 }
 
+function spawn1 (){
+    if(player1.alive){
+    timer1 = game.time.create(true);
+    timer1.loop(enemySpawnDelay1, fireArrow1, this);
+    timer1.start()
+    }
 
-/*//function createText(){
-        var centroX1 = game.width/2 - 450
-        var centroY1 = game.height/2
-        var centroX2 = game.width - 450
-        var centroY2 = game.height/2
-        console.log("centro:"+centroX2 )
-        scoreFinal1 = game.add.text(centroX1 , centroY1, 'Score final:', { font: '24px Arial', fill: '#fff' })
-        scoreFinal2 = game.add.text(centroX2 , centroY2, 'Score final2:', { font: '24px Arial', fill: '#fff' })
-        gameOver = game.add.text(game.world.centerX, game.world.centerY, 'GAME OVER!', { font: '84px Arial', fill: '#fff' })
-        gameOver.anchor.setTo(0.5, 0.5)
-        gameOver.visible = false
-        scoreFinal1.anchor.setTo(0.5, 0.5)
-        scoreFinal1.visible = true
-        scoreFinal1.stroke = '#000000';
-        scoreFinal1.strokeThickness = 2;
-        scoreFinal2.stroke = '#000000';
-        scoreFinal2.strokeThickness = 2;
-        
-//}*/
+}
+
+function spawn2 (){  
+    if(player2.alive){
+    timer2 = game.time.create(true);
+    timer2.loop(enemySpawnDelay2, fireArrow2, this);
+    timer2.start()
+    }
+}
+
+function subirNivel(){
+    if(player1.alive || player2.alive){
+    if(enemyspeed1 > 1000){
+    enemyspeed1 -= 1000
+    }
+    if(enemyspeed2 > 1000){
+    enemyspeed2 -= 1000
+    }
+    spawn1()
+    spawn2()
+    gameLevel++
+    flagUpLevel = false
+    }
+}
+
 
 function loadFile() {
     var text = game.cache.getText('map1');
@@ -300,18 +336,22 @@ function spawnGreenPotion(){
     var aux = Math.floor((Math.random() * 639) + 1);
     var auxSpawn2 = 640
     auxSpawn2 += Math.floor((Math.random() * 639) + 1);
-    var chance = Math.floor((Math.random()*0)+0)
+    var chance = Math.floor((Math.random()*2)+1)
+    var chanceplayer = Math.floor((Math.random()*2)+1)
     //console.log(player1.alive)
-    if(chance == 0){    
-    if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
-                var item = new Bonus(game, aux, -30, 'green', aux, enemyspeed1) 
+    if(chance == 1){    
+        if(chanceplayer==1){
+                 if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
+                var item = new Bonus(game, aux, -30, 'green', aux, itemspeed) 
                 game.add.existing(item)
                 greenPotions.add(item)}
- 
-    if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
-                var item = new Bonus(game, auxSpawn2, -30, 'green', auxSpawn2, enemyspeed1) 
+        }
+        else{
+                if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
+                var item = new Bonus(game, auxSpawn2, -30, 'green', auxSpawn2, itemspeed) 
                 game.add.existing(item)
                 greenPotions.add(item)}
+    }
     }
 }
 
@@ -319,18 +359,22 @@ function spawnRedPotion(){
     var aux = Math.floor((Math.random() * 639) + 1);
     var auxSpawn2 = 640
     auxSpawn2 += Math.floor((Math.random() * 639) + 1);
-    var chance = Math.floor((Math.random()*0)+0)
+    var chance = Math.floor((Math.random()*2)+1)
+    var chanceplayer = Math.floor((Math.random()*2)+1)
     //console.log('chance red :' +chance)
-    if(chance == 0){    
+    if(chance == 1){
+        if(chanceplayer==1){    
     if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
-                var item = new Bonus(game, aux, -30, 'red', aux, enemyspeed1 ) 
+                var item = new Bonus(game, aux, -30, 'red', aux, itemspeed ) 
                 game.add.existing(item)
                 redPotions.add(item)}
- 
-    if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
-                var item = new Bonus(game, auxSpawn2, -30, 'red', auxSpawn2, enemyspeed1) 
+        }
+    else{
+        if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
+                var item = new Bonus(game, auxSpawn2, -30, 'red', auxSpawn2, itemspeed) 
                 game.add.existing(item)
                 redPotions.add(item)}
+    }
     }
 }
 
@@ -338,18 +382,69 @@ function spawnSpecialIten(){
     var aux = Math.floor((Math.random() * 639) + 1);
     var auxSpawn2 = 640
     auxSpawn2 += Math.floor((Math.random() * 639) + 1);
-    var chance = Math.floor((Math.random()*0)+0)
+    var chance = Math.floor((Math.random()*2)+1)
+    var chanceplayer = Math.floor((Math.random()*2)+1)
     //console.log('chance special:' +chance)
-    if(chance == 0){    
-    if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
-                var item = new Bonus(game, aux, -30, 'special', aux, enemyspeed1 ) 
+    if(chance == 1){
+        if(chanceplayer == 1){    
+        if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
+                var item = new Bonus(game, aux, -30, 'special', aux, itemspeed ) 
                 game.add.existing(item)
                 specialPotions.add(item)}
- 
-    if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
-                var item = new Bonus(game, auxSpawn2, -30, 'special', auxSpawn2, enemyspeed1) 
+        }
+        else{
+            if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
+                var item = new Bonus(game, auxSpawn2, -30, 'special', auxSpawn2, itemspeed) 
                 game.add.existing(item)
                 specialPotions.add(item)}
+        
+        }    
+    }
+}
+
+function spawnColecionavel1(){
+    var aux = Math.floor((Math.random() * 639) + 1);
+    var chanceplayer = Math.floor((Math.random()*2)+1)
+    var chance = Math.floor((Math.random()*2)+1)
+    var auxSpawn2 = 640
+    auxSpawn2 += Math.floor((Math.random() * 639) + 1);
+    //console.log('chance coleçao:' +chance)
+    if(chance == 1){
+        if(chanceplayer == 1){    
+            if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
+                        var colecionaveis = new Bonus(game, aux, -30, 'colecionavel1', aux, itemspeed ) 
+                        game.add.existing(colecionaveis)
+                        colecionaveis1.add(colecionaveis)}
+        }
+        else{
+            if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
+                        var colecionaveis = new Bonus(game, auxSpawn2, -30, 'colecionavel1', auxSpawn2, itemspeed) 
+                        game.add.existing(colecionaveis)
+                        colecionaveis1.add(colecionaveis)}
+            }
+    }
+}
+
+function spawnColecionavel2(){
+    var aux = Math.floor((Math.random() * 639) + 1);
+    var chanceplayer = Math.floor((Math.random()*2)+1)
+    var chance = Math.floor((Math.random()*2)+1)
+    var auxSpawn2 = 640
+    auxSpawn2 += Math.floor((Math.random() * 641) + 1);
+    //console.log('chance player2:' +chanceplayer + 'auxspawn2 '+auxSpawn2)
+    if(chance == 1){
+        if(chanceplayer == 1){    
+            if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
+                        var colecionaveis = new Bonus(game, aux, -30, 'colecionavel2', aux,itemspeed ) 
+                        game.add.existing(colecionaveis)
+                        colecionaveis2.add(colecionaveis)}
+        }
+        else{
+            if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
+                        var colecionaveis = new Bonus(game, auxSpawn2, -30, 'colecionavel2', auxSpawn2, itemspeed) 
+                        game.add.existing(colecionaveis)
+                        colecionaveis2.add(colecionaveis)}
+            }
     }
 }
 
@@ -358,18 +453,23 @@ function spawnPurpleIten(){
     var aux = Math.floor((Math.random() * 639) + 1);
     var auxSpawn2 = 640
     auxSpawn2 += Math.floor((Math.random() * 639) + 1);
-    var chance = Math.floor((Math.random()*0)+0)
+    var chance = Math.floor((Math.random()*2)+1)
+    var chanceplayer = Math.floor((Math.random()*2)+1)
+    
     //console.log('chance special:' +chance)
-    if(chance == 0){    
-    if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
-                var item = new Bonus(game, aux, -30, 'purple', aux, enemyspeed1 ) 
+    if(chance == 1){
+        if(chanceplayer == 1){    
+            if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
+                var item = new Bonus(game, aux, -30, 'purple', aux, itemspeed ) 
                 game.add.existing(item)
                 purplePotions.add(item)}
- 
-    if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
-                var item = new Bonus(game, auxSpawn2, -30, 'purple', auxSpawn2, enemyspeed1) 
+        }
+        else{
+            if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
+                var item = new Bonus(game, auxSpawn2, -30, 'purple', auxSpawn2, itemspeed) 
                 game.add.existing(item)
                 purplePotions.add(item)}
+        }
     }
 }
 
@@ -434,17 +534,22 @@ function cleanEnemy(){
         item.destroy();
         }
     })
-}
-
-function cleanItens(){
-    itens.forEach(function(item){
+    colecionaveis1.forEach(function(item){
         if(!item.alive){
         item.destroy();
         }
     })
+    colecionaveis2.forEach(function(item){
+        if(!item.alive){
+        item.destroy();
+        }
+    })  
 }
 
+
+
 function fireArrow2(){
+    
     var auxSpawn2 = 640 
     //console.log("antes de somar:"+auxSpawn2)
     auxSpawn2 += Math.floor((Math.random() * 640) + 1);    
@@ -459,21 +564,12 @@ function fireArrow2(){
 
 function update() {
     
-   /* console.log(aux3)
-    var aux2 = Math.floor((Math.random() * 1280) + 1);
-    if(aux2 < 10){ 
-    firearrow()
-    }*/
+    upLevel()
     
     
     hud.fps.text = `FPS ${game.time.fps}`
 
-   // sky.tilePosition.x += 0.5
-    
- 
-    //moveAndStop(player1)
-    //updateBullets(player1.bullets)
-    //updateBullets(player2.bullets)
+   
 
     game.physics.arcade.collide(player1, player2)
     game.physics.arcade.collide(player1, obstacles, hitPlayer1)
@@ -489,6 +585,13 @@ function update() {
     
     game.physics.arcade.collide(player1, purplePotions, potionPurple1)
     game.physics.arcade.collide(player2, purplePotions, potionPurple2)
+    
+    game.physics.arcade.collide(player1, colecionaveis1, colecionavelScore1)
+    game.physics.arcade.collide(player2, colecionaveis1, colecionavelScore1)
+    
+    
+    game.physics.arcade.collide(player1, colecionaveis2, colecionavelScore2)
+    game.physics.arcade.collide(player2, colecionaveis2, colecionavelScore2)
 
 
     game.physics.arcade.collide(player1, map)
@@ -497,12 +600,14 @@ function update() {
     
     game.physics.arcade.collide(player1, obstacles)
     game.physics.arcade.collide(player2, obstacles)
-    game.physics.arcade.collide(obstacles, map, killPotion)
+    game.physics.arcade.collide(obstacles, map, killArrow)
     game.physics.arcade.collide(itens, map, killPotion)
     game.physics.arcade.collide(redPotions, map, killPotion)
     game.physics.arcade.collide(greenPotions, map, killPotion)
     game.physics.arcade.collide(specialPotions, map, killPotion)
     game.physics.arcade.collide(purplePotions, map, killPotion)
+    game.physics.arcade.collide(colecionaveis1, map, killPotion)
+    game.physics.arcade.collide(colecionaveis2, map, killPotion)
     cleanEnemy()   
 }
 
@@ -513,17 +618,17 @@ function killPotion(item, wall) {
 
 function killArrow(arrow, wall) {
     //wall.kill()
-    arrow.kill()
+    
     
     if(arrow.body.x < 639){
-        scorep1 += 5
+        scorep1 += 50
     }
     else if (arrow.body.x > 641){
-        scorep2 += 5
+        scorep2 += 50
     }
-    arrow.destroy
     //console.log("X:"+arrow.body.x)
     //arrow.kill()
+    arrow.kill()
     updateHud()
 }
 
@@ -550,26 +655,67 @@ function greenPotion(player, item) {
         updateHud()
     }
 }
+function colecionavelScore1(player, item) {
+    if (player.alive && player.player1) {
+        scorep1 +=1000
+        item.kill()
+        updateHud()
+    }
+    else if (player.alive && !player.player1) {
+        scorep2 +=1000
+        item.kill()
+        updateHud()
+    }
+}
+
+function colecionavelScore2(player, item) {
+    if (player.alive && player.player1) {
+        scorep1 +=10000
+        item.kill()
+        updateHud()
+    }
+    else if (player.alive && !player.player1) {
+        scorep2 +=10000
+        item.kill()
+        updateHud()
+    }
+}
 
 function potionPurple1(player, item){
     
         if (player.alive) {
             if(player.player1){
             //console.log("inimigo dano2 "+enemyDamage2)
+            if(enemyspeed2 > 1000){
             enemyspeed2 -= 1000
+            }
+            if (enemySpawnDelay2> -1){
             enemySpawnDelay2 -=500
+            }
+            spawn2()
             item.kill()
-            updateHud()}
+            }
         }
 }
 
-function potionPurple2(){
-    enemyspeed1 -= 1000
-    enemySpawnDelay1-= 500
-    gameLevel += 1
-    flagUpLevel = false
-
+function potionPurple2(player, item){
+    
+        if (player.alive) {
+            if(player.player1){
+            //console.log("inimigo dano2 "+enemyDamage2)
+            if(enemyspeed1 > 1000){
+            enemyspeed1 -= 1000
+            }
+            if (enemySpawnDelay1> -1){
+            enemySpawnDelay1 -=500
+            }
+            spawn1()
+            item.kill()
+            }
+        }
 }
+
+
 
 function yellowPotion2(){
     var aux = Math.floor((Math.random() * 639) + 1);
@@ -656,7 +802,7 @@ function upLevel (){
 
 
 function fadeLevel() {
-    console.log('CHEGUEI AQ')
+    //console.log('CHEGUEI AQ')
         hud.textLevel.visible = false
         flagUpLevel = true
 }
@@ -702,11 +848,11 @@ function updateHud() {
 
 function render() {
     map.forEach( function(obj) {game.debug.body(obj)})
-    obstacles.forEach( function(obj) {game.debug.body(obj)})
-    specialPotions.forEach( function(obj) {game.debug.body(obj)})
-    itens.forEach( function(obj) {game.debug.body(obj)})
-    greenPotions.forEach( function(obj) {game.debug.body(obj)})
-    redPotions.forEach( function(obj) {game.debug.body(obj)})
+   // obstacles.forEach( function(obj) {game.debug.body(obj)})
+   // specialPotions.forEach( function(obj) {game.debug.body(obj)})
+   // itens.forEach( function(obj) {game.debug.body(obj)})
+  //  greenPotions.forEach( function(obj) {game.debug.body(obj)})
+  //  redPotions.forEach( function(obj) {game.debug.body(obj)})
     game.debug.body(player1)
     game.debug.body(player2)
 }
