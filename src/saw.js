@@ -4,7 +4,6 @@ class Saw extends Phaser.Sprite {
         this.scale.setTo(1.5, 1.5)
         this.anchor.setTo(0.5, 0.5)
         game.physics.arcade.enable(this)
-        
         this.body.setSize(46, 46, 9, 9)
         this.body.isCircle = true
         var left = 0

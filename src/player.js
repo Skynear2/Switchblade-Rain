@@ -10,8 +10,8 @@ class Player extends Phaser.Sprite {
         this.health = config.PLAYER_HEALTH
         this.anchor.setTo(0.5, 0.5)
         game.physics.arcade.enable(this)
-        this.body.drag.set(config.PLAYER_DRAG)
-        this.body.maxVelocity.set(config.PLAYER_MAX_VELOCITY)
+        //this.body.drag.set(config.PLAYER_DRAG)
+        //this.body.maxVelocity.set(config.PLAYER_MAX_VELOCITY)
         this.body.isCircle = false
         //this.body.mass = 1
         this.body.friction.setTo(0,0)
@@ -38,17 +38,17 @@ class Player extends Phaser.Sprite {
         // rotaciona
         if (this.cursors.left.isDown) {
             //this.body.x += -this.speedX
-            this.body.velocity.x = -150
+            this.body.velocity.x = -250
         } else
         if (this.cursors.right.isDown) {
-            this.body.velocity.x = 150
+            this.body.velocity.x = 250
             //this.body.x += this.speedX
         }
         //console.log(this.body.onWall())
         //&& this.body.onFloor()
         if(this.cursors.up.isDown  && game.time.now > this.jumpTimer){
-            this.body.velocity.y = -250;
-            this.jumpTimer = game.time.now + 750;
+            this.body.velocity.y = -2000000;
+            this.jumpTimer = game.time.now + 1750;
         }
          
 

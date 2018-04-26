@@ -55,6 +55,9 @@ var timeritem1
 var timeritem2
 var timeritem3
 var special
+var gameLevel = 1
+var textLevel
+var flagUpLevel = false
 
 var game = new Phaser.Game(config.RES_X, config.RES_Y, Phaser.CANVAS, 
     'game-container',
@@ -63,6 +66,7 @@ var game = new Phaser.Game(config.RES_X, config.RES_Y, Phaser.CANVAS,
         create: create,
         update: update,
         render: render
+    
     })
     
 function preload() {
@@ -108,7 +112,7 @@ function create() {
     redBarrels = game.add.group()
     specialBarrels = game.add.group()
     createMap()
-
+ 
     player1 = new Player(game, game.width*2/9, game.height-85, 
                         'plane1', 0xff0000,true, {   
             left: Phaser.Keyboard.LEFT,
@@ -126,9 +130,9 @@ function create() {
             fire: Phaser.Keyboard.G
         })
         game.physics.enable(player1, Phaser.Physics.ARCADE);
-        game.physics.arcade.gravity.y = 250
-        player1.body.gravity.y = 250;
-        player2.body.gravity.y = 250;
+        game.physics.arcade.gravity.y = 150
+        player1.body.gravity.y = 550;
+        player2.body.gravity.y = 550;
         game.add.existing(player1)
     game.add.existing(player2)
     player2.scale.x *= -1;
@@ -139,23 +143,24 @@ function create() {
         fps: createHealthText(game.width*6/9, 50, 'FPS'),
         text3: createHealthText((game.width/2 - 450), (game.height/2), 'Score Final: '),
         text4: createHealthText((game.width - 285), (game.height/2), 'Score Final: '),
-        text5: createEndText(game.width/2, game.height/2-40, 'GAME OVER!!', ),
+        text5: createEndText(game.width/2, game.height/2-40, 'GAME OVER!!'),
         text6: createWinnerText(game.width/2, (game.height/2 + 60), 'PLAYER 1 WIN!!!'),
         text7: createWinnerText(game.width/2, (game.height/2 + 60), 'PLAYER 2 WIN!!!'),
-        
+        textLevel: createEndText(game.width/2, game.height/2-40, 'Level 1!!') 
        
         }
+        
         hud.text3.visible = false
         hud.text4.visible = false
-    //createText()
+        //createText()
     updateHud()
-
+    upLevel()
     var fps = new FramesPerSecond(game, game.width*3/9, 50)
     game.add.existing(fps)
 
     var fullScreenButton = game.input.keyboard.addKey(Phaser.Keyboard.ONE)
     fullScreenButton.onDown.add(toggleFullScreen)
-
+    upLevel()
     game.time.advancedTiming = true;
 }
 
@@ -375,6 +380,14 @@ function fireSaw1(){
       
 }
 
+function cleanEnemy(){
+    obstacles.forEach(function(saw){
+        if(!saw.alive){
+        saw.destroy();
+        }
+    })
+}
+
 function fireSaw2(){
     var auxSpawn2 = 640 
     //console.log("antes de somar:"+auxSpawn2)
@@ -429,7 +442,7 @@ function update() {
     game.physics.arcade.collide(redBarrels, map, killBarrel)
     game.physics.arcade.collide(greenBarrels, map, killBarrel)
     game.physics.arcade.collide(specialBarrels, map, killBarrel)
-    
+    cleanEnemy()   
 }
 
 function killBarrel(item, wall) {
@@ -440,12 +453,14 @@ function killBarrel(item, wall) {
 function killBullet(saw, wall) {
     //wall.kill()
     saw.kill()
+    
     if(saw.body.x < 639){
         scorep1 += 5
     }
     else if (saw.body.x > 641){
         scorep2 += 5
     }
+    saw.destroy
     //console.log("X:"+saw.body.x)
     //saw.kill()
     updateHud()
@@ -500,6 +515,36 @@ function barrelSpecial1(player, item){
 
 }
 
+function barrelSpecial2(player, item){
+   var aux2= 640 
+   var aux3= 640 
+   var aux4= 640
+   var aux5= 640
+   var aux = 640
+    var aux = Math.floor((Math.random() * 639) + 1);
+    var aux2 = Math.floor((Math.random() * 639) + 1);
+    var aux3 = Math.floor((Math.random() * 639) + 1);
+    var aux4 = Math.floor((Math.random() * 639) + 1);
+    var aux5 = Math.floor((Math.random() * 639) + 1);
+
+    var saw = new Saw(game, aux, -30, 'saw', aux, enemyspeed1) 
+                game.add.existing(saw)
+                obstacles.add(saw)
+    var saw2 = new Saw(game, aux2, -30, 'saw', aux2, enemyspeed1) 
+                game.add.existing(saw)
+                obstacles.add(saw)
+    var saw3 = new Saw(game, aux3, -30, 'saw', aux3, enemyspeed1) 
+                game.add.existing(saw)
+                obstacles.add(saw)
+    var saw4 = new Saw(game, aux4, -30, 'saw', aux4, enemyspeed1) 
+                game.add.existing(saw)
+                obstacles.add(saw)
+    var saw5 = new Saw(game, aux5, -30, 'saw', aux5, enemyspeed1) 
+                game.add.existing(saw)
+                obstacles.add(saw)
+
+}
+
 function redBarrel(player, item) {
     if (player.alive) {
         if(player.player1){
@@ -518,6 +563,22 @@ function redBarrel(player, item) {
     }
 }
 
+function upLevel (){
+    
+    
+    hud.textLevel.text = `Level  ${gameLevel}!!!`
+    if(!flagUpLevel){
+    hud.textLevel.visible = true
+    game.time.events.add(Phaser.Timer.SECOND * 2, fadeLevel, this);
+    }
+}
+
+
+function fadeLevel() {
+    console.log('CHEGUEI AQ')
+        hud.textLevel.visible = false
+        flagUpLevel = true
+}
 
 function winner(){
     
@@ -526,7 +587,7 @@ function winner(){
         hud.text4.visible = true
         hud.text5.visible = true
         hud.text6.visible = true
-        hut       
+             
         var fadeInGameOver = game.add.tween(hud.text5);
         fadeInGameOver.to({ alpha: 1 }, 5000, Phaser.Easing.Quintic.Out);
         fadeInGameOver.start();
