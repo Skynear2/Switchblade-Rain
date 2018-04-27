@@ -659,7 +659,7 @@ function hitPlayer2(player, arrow) {
 function greenPotion(player, item) {
     if (player.alive) {
         ite.play()
-        player.health+= 10
+        player.health+= 5
         item.kill()
         updateHud()
     }
