@@ -122,7 +122,7 @@ function create() {
     music = game.add.audio('bgsong');
     music.play()
     music.loop = true
-    music.volume = 0.03
+    music.volume = 0.3
     startLevel()
     
 
@@ -207,7 +207,7 @@ function create() {
 
 function startLevel(){
     timerlevel = game.time.create(true)
-    timerlevel.loop(5000, subirNivel, this)
+    timerlevel.loop(30000, subirNivel, this)
     timerlevel.start()
 
 }
