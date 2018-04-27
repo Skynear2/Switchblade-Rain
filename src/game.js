@@ -20,7 +20,7 @@ config.PLAYER_ACCELERATION  = 600
 config.PLAYER_TURN_VELOCITY = 350
 config.PLAYER_MAX_VELOCITY  = 300
 config.PLAYER_HEALTH        = 30
-config.PLAYER_DRAG          = 300
+config.PLAYER_DRAG          = 800
 
 
 config.BULLET_FIRE_RATE     = 20
@@ -68,7 +68,11 @@ var music
 var colecionaveis1
 var colecionaveis2
 var timerlevel
-
+var hit
+var dano
+var colec
+var ite
+var atirar 
 
 var game = new Phaser.Game(config.RES_X, config.RES_Y, Phaser.CANVAS, 
     'game-container',
@@ -97,6 +101,11 @@ function preload() {
     game.load.text('map1', 'assets/map1.txt');  // arquivo txt do mapa
     
     game.load.audio('bgsong', 'assets/audio/01 Monody (feat. Laura Brehm).mp3')
+    //game.load.audio('hit', 'assets/audio/OOT_Arrow_Hit.mp3')
+    game.load.audio('iten', 'assets/audio/iten.ogg')
+    game.load.audio('dano', 'assets/audio/dano.ogg')
+    game.load.audio('colec', 'assets/audio/colec.ogg')
+    game.load.audio('atirar', 'assets/audio/atirar.ogg')
 }
 
 
@@ -112,9 +121,22 @@ function create() {
     sky.scale.y = game.height/sky.height
     music = game.add.audio('bgsong');
     music.play()
+    music.loop = true
     music.volume = 0.03
     startLevel()
+    
 
+
+    dano = game.add.audio('dano')
+    hit = game.add.audio('hit')
+    colec = game.add.audio('colec')
+    ite = game.add.audio('iten')
+    atirar = game.add.audio('atirar')
+    dano.pause()
+    hit.pause()
+    colec.pause()
+    ite.pause()
+    atirar.pause()
     
     
     obstacles = game.add.group()
@@ -136,7 +158,7 @@ function create() {
             up: Phaser.Keyboard.UP,
             down: Phaser.Keyboard.DOWN,
             fire: Phaser.Keyboard.L
-        })
+        }, true)
     player2 = new Player(game, game.width*7/9, game.height-85, 
                         'plane1',false, {   
             left: Phaser.Keyboard.A,
@@ -144,9 +166,9 @@ function create() {
             up: Phaser.Keyboard.W,
             down: Phaser.Keyboard.S,
             fire: Phaser.Keyboard.G
-        })
+        }, false)
         game.physics.enable(player1, Phaser.Physics.ARCADE);
-        //game.physics.arcade.gravity.y = 150
+        game.physics.arcade.gravity.y = 750
         player1.body.gravity.y = 750;
         player2.body.gravity.y = 750;
         game.add.existing(player1)
@@ -156,7 +178,8 @@ function create() {
     hud = {
         text1: createHealthText(game.width*1/9, 50, 'PLAYER 1: '),
         text2: createHealthText(game.width*8/9, 50, 'PLAYER 2: '),
-        fps: createHealthText(game.width*6/9, 50, 'FPS'),
+        //fps: createHealthText(game.width*4.5/9, 50, 'FPS'),
+        //fps2: createHealthText(game.width*6/9, 50, 'FPS'),
         text3: createHealthText((game.width/2 - 450), (game.height/2), 'Score Final: '),
         text4: createHealthText((game.width - 285), (game.height/2), 'Score Final: '),
         text5: createEndText(game.width/2, game.height/2-40, 'GAME OVER!!'),
@@ -171,12 +194,12 @@ function create() {
         //createText()
     updateHud()
     upLevel()
-    var fps = new FramesPerSecond(game, game.width*3/9, 50)
+    var fps = new FramesPerSecond(game, game.width*4.5/9, 50)
     game.add.existing(fps)
 
     var fullScreenButton = game.input.keyboard.addKey(Phaser.Keyboard.ONE)
     fullScreenButton.onDown.add(toggleFullScreen)
-    spawnparede()
+    
     game.time.advancedTiming = true;
 }
 
@@ -289,7 +312,8 @@ function createMap() {
                 wall.body.allowGravity = false
                 wall.body.immovable = true
                 wall.tag = 'wall'
-                wall.alpha = 0
+                wall.alpha = 1
+                wall.tint = 0x000000
                 
             } 
         }
@@ -484,34 +508,9 @@ function spawnPurpleIten(){
     }
 }
 
-/*
-function spawnIten2(){
-    var aux = Math.floor((Math.random() * 639) + 1);
-    var auxSpawn2 
-    //console.log(player1.alive)    
-    if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
-                var item = new Bonus(game, aux, -30, 'green', aux, enemyspeed1) 
-                game.add.existing(item)
-                itens.add(item)}
-      
-}
-
-function spawnIten2(){
-    var auxSpawn2 = 640
-    auxSpawn2 += Math.floor((Math.random() * 639) + 1);
-    //console.log(player1.alive)    
-    if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
-                var item = new Bonus(game, auxSpawn2, -30, 'itens', auxSpawn2, enemyspeed1) 
-                game.add.existing(item)
-                itens.add(item)}
-    
-}*/
-
-
-
 function fireArrow1(){
     var aux = Math.floor((Math.random() * 639) + 1);
-    //console.log(player1.alive)    
+    atirar.play()
     if( (aux >= 0)&& (aux < 640) && (player1.alive) ){            
                 var arrow = new Arrow(game, aux, -30, 'arrow', aux, enemyspeed1) 
                 game.add.existing(arrow)
@@ -560,11 +559,10 @@ function cleanEnemy(){
 
 
 function fireArrow2(){
-    
+    atirar.play()
     var auxSpawn2 = 640 
-    //console.log("antes de somar:"+auxSpawn2)
-    auxSpawn2 += Math.floor((Math.random() * 640) + 1);    
-    //console.log("dps de somar:"+auxSpawn2)
+     auxSpawn2 += Math.floor((Math.random() * 640) + 1);    
+
     if( (auxSpawn2 >= 641)&& (auxSpawn2 < 1280) && (player2.alive) ){            
                 var arrow = new Arrow(game, auxSpawn2, -30, 'arrow', auxSpawn2, enemyspeed2) 
                 game.add.existing(arrow)
@@ -578,46 +576,34 @@ function update() {
     upLevel()
     sky.tilePosition.x += 0.5
     
-    hud.fps.text = `FPS ${game.time.fps}`
-
-    
+    //hud.fps.text = `FPS ${game.time.fps}`
 
     game.physics.arcade.collide(player1, player2)
     game.physics.arcade.collide(player1, obstacles, hitPlayer1)
     game.physics.arcade.collide(player2, obstacles, hitPlayer2)
-    game.physics.arcade.collide(player1, greenPotions, greenPotion)
-    game.physics.arcade.collide(player2, greenPotions, greenPotion)
+    game.physics.arcade.overlap(player1, greenPotions, greenPotion)
+    game.physics.arcade.overlap(player2, greenPotions, greenPotion)
 
-    game.physics.arcade.collide(player1, redPotions, redPotion)
-    game.physics.arcade.collide(player2, redPotions, redPotion)
+    game.physics.arcade.overlap(player1, redPotions, redPotion)
+    game.physics.arcade.overlap(player2, redPotions, redPotion)
 
-    game.physics.arcade.collide(player1, specialPotions, yellowPotion1)
-    game.physics.arcade.collide(player2, specialPotions, yellowPotion2)
+    game.physics.arcade.overlap(player1, specialPotions, yellowPotion1)
+    game.physics.arcade.overlap(player2, specialPotions, yellowPotion2)
     
-    game.physics.arcade.collide(player1, purplePotions, potionPurple1)
-    game.physics.arcade.collide(player2, purplePotions, potionPurple2)
+    game.physics.arcade.overlap(player1, purplePotions, potionPurple1)
+    game.physics.arcade.overlap(player2, purplePotions, potionPurple2)
+    game.physics.arcade.overlap(map, player1)
+    game.physics.arcade.overlap(map, player2)
 
+    game.physics.arcade.overlap(player1, colecionaveis1, colecionavelScore1)
+    game.physics.arcade.overlap(player2, colecionaveis1, colecionavelScore1)
     
+    game.physics.arcade.overlap(player1, colecionaveis2, colecionavelScore2)
+    game.physics.arcade.overlap(player2, colecionaveis2, colecionavelScore2)
 
-    game.physics.arcade.collide(map, player1)
-    game.physics.arcade.collide(map, player2)
-
-    
-    
-    game.physics.arcade.collide(player1, colecionaveis1, colecionavelScore1)
-    game.physics.arcade.collide(player2, colecionaveis1, colecionavelScore1)
-    
-    
-    game.physics.arcade.collide(player1, colecionaveis2, colecionavelScore2)
-    game.physics.arcade.collide(player2, colecionaveis2, colecionavelScore2)
-
-    //console.log(player.checkcolli)
     game.physics.arcade.collide(player1, map)
     game.physics.arcade.collide(player2, map)
-    
-    
-    
-    
+    //collide itens e players contra o mapa
     game.physics.arcade.collide(player1, obstacles)
     game.physics.arcade.collide(player2, obstacles)
     game.physics.arcade.collide(obstacles, map, killArrow)
@@ -654,6 +640,7 @@ function killArrow(arrow, wall) {
 
 function hitPlayer1(player, arrow) {
     if (player.alive) {
+        dano.play()
         player.damage(enemyDamage1)
         arrow.kill()
         updateHud()
@@ -662,6 +649,7 @@ function hitPlayer1(player, arrow) {
 
 function hitPlayer2(player, arrow) {
     if (player.alive) {
+        dano.play()
         player.damage(enemyDamage2)
         arrow.kill()
         updateHud()
@@ -670,6 +658,7 @@ function hitPlayer2(player, arrow) {
 
 function greenPotion(player, item) {
     if (player.alive) {
+        ite.play()
         player.health+= 10
         item.kill()
         updateHud()
@@ -677,11 +666,13 @@ function greenPotion(player, item) {
 }
 function colecionavelScore1(player, item) {
     if (player.alive && player.player1) {
+        colec.play()
         scorep1 +=1000
         item.kill()
         updateHud()
     }
     else if (player.alive && !player.player1) {
+        colec.play()
         scorep2 +=1000
         item.kill()
         updateHud()
@@ -690,11 +681,13 @@ function colecionavelScore1(player, item) {
 
 function colecionavelScore2(player, item) {
     if (player.alive && player.player1) {
+        colec.play()
         scorep1 +=10000
         item.kill()
         updateHud()
     }
     else if (player.alive && !player.player1) {
+        colec.play()
         scorep2 +=10000
         item.kill()
         updateHud()
@@ -707,10 +700,12 @@ function potionPurple1(player, item){
             if(player.player1){
             //console.log("inimigo dano2 "+enemyDamage2)
             if(enemyspeed2 > 1000){
-            enemyspeed2 -= 1000
+                ite.play()
+                enemyspeed2 -= 1000
             }
             if (enemySpawnDelay2> -1){
-            enemySpawnDelay2 -=500
+                ite.play()
+                enemySpawnDelay2 -=500
             }
             spawn2()
             item.kill()
@@ -724,10 +719,12 @@ function potionPurple2(player, item){
             if(player.player1){
             //console.log("inimigo dano2 "+enemyDamage2)
             if(enemyspeed1 > 1000){
-            enemyspeed1 -= 1000
+                ite.play()
+                enemyspeed1 -= 1000
             }
             if (enemySpawnDelay1> -1){
-            enemySpawnDelay1 -=500
+                ite.play()
+                enemySpawnDelay1 -=500
             }
             spawn1()
             item.kill()
@@ -738,6 +735,7 @@ function potionPurple2(player, item){
 
 
 function yellowPotion2(){
+    ite.play()
     var aux = Math.floor((Math.random() * 639) + 1);
     var aux2 = Math.floor((Math.random() * 639) + 1);
     var aux3 = Math.floor((Math.random() * 639) + 1);
@@ -763,16 +761,17 @@ function yellowPotion2(){
 }
 
 function yellowPotion1(){
-   var aux2= 640 
+    ite.play()
+    var aux2= 640 
    var aux3= 640 
    var aux4= 640
    var aux5= 640
    var aux = 640
-    var aux = Math.floor((Math.random() * 1280) + 640);
-    var aux2 = Math.floor((Math.random() * 1280) + 640);
-    var aux3 = Math.floor((Math.random() * 1280) + 640);
-    var aux4 = Math.floor((Math.random() * 1280) + 640);
-    var aux5 = Math.floor((Math.random() * 1280) + 640);
+    var aux = Math.floor((Math.random() * 639) + 640);
+    var aux2 = Math.floor((Math.random() * 639) + 640);
+    var aux3 = Math.floor((Math.random() * 639) + 640);
+    var aux4 = Math.floor((Math.random() * 639) + 640);
+    var aux5 = Math.floor((Math.random() * 639) + 640);
     //console.log('POTIONSPECIAL2' + 'aux '+aux + ' aux2 '+aux2+' aux3 '+aux3+' aux4 '+aux4+' aux5 '+aux5);
     var arrow = new Arrow(game, aux, -30, 'arrow', aux, enemyspeed1) 
                 game.add.existing(arrow)
@@ -796,12 +795,14 @@ function redPotion(player, item) {
     if (player.alive) {
         if(player.player1){
         //console.log("inimigo dano2 "+enemyDamage2)
+        ite.play()
         enemyDamage2 += 2
         item.kill()
         updateHud()
     }
     else {
         //console.log("inimigo dano1 "+enemyDamage1)
+        ite.play()
         enemyDamage1+2
         enemyDamage2 + 2
         item.kill()
@@ -868,13 +869,13 @@ function updateHud() {
 
 function render() {
     //paredes.forEach( function(obj) {game.debug.body(obj)})
-    map.forEach( function(obj) {game.debug.body(obj)})
+    //map.forEach( function(obj) {game.debug.body(obj)})
     //paredes.forEach( function(obj) {game.debug.body(obj)})
    // obstacles.forEach( function(obj) {game.debug.body(obj)})
    // specialPotions.forEach( function(obj) {game.debug.body(obj)})
    // itens.forEach( function(obj) {game.debug.body(obj)})
   //  greenPotions.forEach( function(obj) {game.debug.body(obj)})
   //  redPotions.forEach( function(obj) {game.debug.body(obj)})
-    game.debug.body(player1)
-    game.debug.body(player2)
+    //game.debug.body(player1)
+    //game.debug.body(player2)
 }

@@ -1,7 +1,7 @@
 
 class FramesPerSecond extends Phaser.Text {    
         constructor(game, x, y) {
-            super(game, x, y, 'FPS 00' )
+            super(game, x, y, 'FPS' )
             this.setStyle({font: 'bold 16px Arial', fill: 'white'})
             //this.setShadow(3, 3, 'rgba(0, 0, 0, 0.5)', 2)
             this.stroke = '#000000';
